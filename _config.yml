@@ -10,14 +10,14 @@ relative_permalinks: true
 title:            PicoLisp Libraries
 tagline:          "AW's collection of PicoLisp libraries"
 description:      ''
-url:              https://aw.github.io/picolisp
+url:              https://aw.github.io
 baseurl:          /picolisp/
 
 author:
   name:           'Alexander Williams'
   url:            https://github.com/aw
 
-paginate:         10
+paginate:         1
 
 # Custom vars
 github:
