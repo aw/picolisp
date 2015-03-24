@@ -12,7 +12,7 @@
     <nav class="sidebar-nav">
       <ul>
       {% for post in site.posts %}
-        <li><a href="{{ post.url }}">
+        <li><a href="{{ site.baseurl }}{{ post.url }}">
           {{ post.name }}
         </a></li>
       {% endfor %}
