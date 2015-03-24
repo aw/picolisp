@@ -10,7 +10,7 @@ relative_permalinks: true
 title:            PicoLisp Libraries
 tagline:          "AW's collection of PicoLisp libraries"
 description:      ''
-url:              https://aw.github.com/picolisp
+url:              https://aw.github.io/picolisp
 baseurl:          /
 
 author:
