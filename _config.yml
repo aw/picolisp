@@ -11,7 +11,7 @@ title:            PicoLisp Libraries
 tagline:          "AW's collection of PicoLisp libraries"
 description:      ''
 url:              https://aw.github.io/picolisp
-baseurl:          /
+baseurl:          /picolisp
 
 author:
   name:           'Alexander Williams'
