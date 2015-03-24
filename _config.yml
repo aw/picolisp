@@ -1,0 +1,24 @@
+# Dependencies
+markdown:         redcarpet
+highlighter:      pygments
+
+# Permalinks
+permalink:        pretty
+relative_permalinks: true
+
+# Setup
+title:            PicoLisp Libraries
+tagline:          "AW's collection of PicoLisp libraries"
+description:      ''
+url:              https://aw.github.com/picolisp
+baseurl:          /
+
+author:
+  name:           'Alexander Williams'
+  url:            https://github.com/aw
+
+paginate:         10
+
+# Custom vars
+github:
+  repo:           https://github.com/aw/picolisp
