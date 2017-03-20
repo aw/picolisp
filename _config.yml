@@ -10,7 +10,6 @@ title:            PicoLisp Libraries
 tagline:          "AW's collection of PicoLisp libraries"
 description:      ''
 url:              http://picolisp.a1w.ca
-baseurl:          /
 
 author:
   name:           'Alexander Williams'
