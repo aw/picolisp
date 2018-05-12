@@ -9,7 +9,7 @@ permalink:        pretty
 title:            PicoLisp Libraries
 tagline:          "AW's collection of PicoLisp libraries"
 description:      ''
-url:              http://picolisp.a1w.ca
+url:              https://picolisp.a1w.ca
 
 author:
   name:           'Alexander Williams'
