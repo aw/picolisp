@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      POSIX Message Queues library for PicoLisp &middot; PicoLisp Libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">POSIX Message Queues library for PicoLisp</h1>
+  <span class="post-date">16 Sep 2020</span>
+  <p>You can <a href="https://github.com/aw/picolisp-posixmq">get it on GitHub</a>.</p>
+
+<p><em><a href="https://man7.org/linux/man-pages/man7/mq_overview.7.html">POSIX Message Queues</a></em> provide a dependency-free mechanism for processes to exchange data in the form of messages.</p>
+
+<p>This library makes it simple to embed support for <em>POSIX Message Queues</em> in <a href="https://picolisp.com">PicoLisp</a> applications running on Linux.</p>
+
+<ol>
+  <li><a href="#requirements">Requirements</a></li>
+  <li><a href="#getting-started">Getting Started</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#documentation">Documentation</a></li>
+</ol>
+
+<h1 id="requirements">Requirements</h1>
+
+<ul>
+  <li>PicoLisp <strong>64-bit</strong> <code class="language-plaintext highlighter-rouge">v17.12</code> to <code class="language-plaintext highlighter-rouge">v20.7.16</code>, or <code class="language-plaintext highlighter-rouge">pil21</code></li>
+  <li>Linux with kernel <code class="language-plaintext highlighter-rouge">v3.5+</code></li>
+  <li>Kernel <em>POSIX Message Queues</em> support</li>
+  <li>POSIX Realtime Extensions library (<strong>librt.so</strong>)</li>
+</ul>
+
+<h1 id="getting-started">Getting Started</h1>
+
+<p>The first step is to run the unit tests: <code class="language-plaintext highlighter-rouge">make check</code></p>
+
+<p>If those fail, jump to the <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a> section to perform the initial setup and and system check.</p>
+
+<p>If all works well, then your system is ready to use this library.</p>
+
+<h1 id="quick-start">Quick Start</h1>
+
+<p>The code below illustrates how to use the queue for sending and receiving a message.</p>
+
+<h4 id="example-code">Example Code</h4>
+
+<pre><code class="language-picolisp">(load "mqueue.l")                               # load the library
+(let Fd (pmq-open "/myQ" (list O_RDWR O_CREAT)) # create a read/write queue named "/myQ"
+  (pmq-send Fd "Hello World")                   # send the message "Hello World"
+  (pmq-receive Fd)                              # receive the message
+  (pmq-close Fd)                                # close the queue
+  (pmq-unlink "/myQ") )                         # remove the queue
+</code></pre>
+
+<h4 id="example-output">Example Output</h4>
+
+<p><strong>Note:</strong> Verbose output is enabled by default and can be disabled with <code class="language-plaintext highlighter-rouge">(off *PMQ_verbose)</code>.</p>
+
+<pre><code class="language-none">[2020-09-17T03:37:15] Opened queue: Name='/myqueue', FD=3
+[2020-09-17T03:37:15] Send: String='Hello World', Priority=0, FD=3
+[2020-09-17T03:37:15] Get attributes: Flags=0, Maxmsg=10, Msgsize=8192, Curmsgs=1, FD=3
+[2020-09-17T03:37:15] Receive: String='Hello World' (12 Bytes), FD=3
+[2020-09-17T03:37:15] Closed queue: FD=3
+[2020-09-17T03:37:15] Unlinked queue: Name='/myqueue'
+-&gt; 0
+</code></pre>
+
+<h1 id="documentation">Documentation</h1>
+
+<p>Additional usage and reference documentation can be found in <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/">docs/</a></p>
+
+<ul>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a>: some guides <strong>for beginners</strong> to get started using this library</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/HOWTO.md">HOWTO</a>: a set of recipes for performing more advanced tasks with this library</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/EXPLAIN.md">EXPLAIN</a>: an explanation of some key concepts, including how this library works</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/REFERENCE.md">REFERENCE</a>: technical information on the internals of this library</li>
+</ul>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/10/29/rust/">
+            PicoLisp FFI with Rust
+            <small>29 Oct 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/18/supervisor/">
+            Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+            <small>18 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/16/keyvalue/">
+            Redis-inspired key/value store written in PicoLisp
+            <small>16 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>

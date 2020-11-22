@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      PicoLisp Libraries &middot; AW's collection of PicoLisp libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://localhost:4000/2020/01/02/action/">
+        GitHub Action to run 32-bit or 64-bit PicoLisp code
+      </a>
+    </h1>
+
+    <span class="post-date">02 Jan 2020</span>
+
+    <p>You can <a href="https://github.com/aw/picolisp-action">get it on GitHub</a> or the <a href="https://github.com/marketplace/actions/picolisp-action">GitHub Marketplace</a>.</p>
+
+<p>This action downloads, compiles, and globally installs PicoLisp.
+It can be used to run PicoLisp code such as <a href="https://github.com/aw/picolisp-unit">units tests</a>.</p>
+
+<p><img src="https://user-images.githubusercontent.com/153401/70022112-e4695580-158a-11ea-886d-0db01dbe7a66.png" alt="Example PicoLisp tests" /></p>
+
+<h2 id="inputs">Inputs</h2>
+
+<h3 id="version"><code class="language-plaintext highlighter-rouge">version</code></h3>
+
+<p><strong>Optional</strong> The version of PicoLisp. Default ‘20.6’. Accepts <code class="language-plaintext highlighter-rouge">19.12</code>, <code class="language-plaintext highlighter-rouge">19.6</code>, <code class="language-plaintext highlighter-rouge">18.12</code>, <code class="language-plaintext highlighter-rouge">18.6</code>, <code class="language-plaintext highlighter-rouge">17.12</code>, <code class="language-plaintext highlighter-rouge">latest</code>, <code class="language-plaintext highlighter-rouge">pil21</code></p>
+
+<h3 id="architecture"><code class="language-plaintext highlighter-rouge">architecture</code></h3>
+
+<p><strong>Optional</strong> The architecture of PicoLisp (32 or 64-bit). Default <code class="language-plaintext highlighter-rouge">src64</code>. Accepts <code class="language-plaintext highlighter-rouge">src</code>, <code class="language-plaintext highlighter-rouge">src64</code></p>
+
+<h2 id="example-usage">Example usage</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- uses: aw/picolisp-action@v2
+  with:
+    version: 18.12
+    architecture: src64
+
+- name: Print Hello World with the full PicoLisp version number
+  run: pil -'prin "Hello World: "' -version -bye
+</code></pre></div></div>
+
+<h2 id="example-workflow">Example workflow</h2>
+
+<p>See the <a href="https://github.com/aw/picolisp-json/blob/master/.github/workflows/main.yml">picolisp-json workflow</a> for a more detailed usage example.</p>
+
+<h2 id="code">Code</h2>
+
+<p>This action is written in CoffeeScript, see <a href="index.coffee">index.coffee</a></p>
+
+<h2 id="notes">Notes</h2>
+
+<ul>
+  <li>Unknown values will be replaced with the default value (ex: version: 1.2.3, will become version: 19.12)</li>
+  <li>The PicoLisp environment is extracted to <code class="language-plaintext highlighter-rouge">/tmp/picoLisp</code></li>
+  <li>32-bit PicoLisp is always compiled</li>
+  <li>64-bit PicoLisp is bootstrapped from the 32-bit PicoLisp</li>
+  <li>64-bit PicoLisp will not be compiled if the <code class="language-plaintext highlighter-rouge">architecture</code> value is <code class="language-plaintext highlighter-rouge">src</code></li>
+  <li><code class="language-plaintext highlighter-rouge">pil21</code> technically only works on 64-bit architectures</li>
+</ul>
+
+<h2 id="build">Build</h2>
+
+<p>To build this action:</p>
+
+<ul>
+  <li>Install <code class="language-plaintext highlighter-rouge">NodeJS v12</code></li>
+  <li>Install the dev dependencies with <code class="language-plaintext highlighter-rouge">npm install</code></li>
+  <li>Generate the <code class="language-plaintext highlighter-rouge">dist/index.js</code> with <code class="language-plaintext highlighter-rouge">npm run build</code></li>
+</ul>
+
+  </div>
+  
+</div>
+
+    </div>
+
+  </body>
+</html>

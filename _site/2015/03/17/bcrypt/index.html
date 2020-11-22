@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      bcrypt hashing for PicoLisp &middot; PicoLisp Libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">bcrypt hashing for PicoLisp</h1>
+  <span class="post-date">17 Mar 2015</span>
+  <p>You can <a href="https://github.com/aw/picolisp-bcrypt">get it on GitHub</a>.</p>
+
+<p>This library can be used to hash strings (ex: passwords) using bcrypt in <a href="http://picolisp.com/">PicoLisp</a>.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6683641/cdb9492e-cc80-11e4-8c5c-24ba9504b90c.png" alt="picolisp-bcrypt" /></p>
+
+<h1 id="bcrypt-hashing-for-picolisp">bcrypt hashing for PicoLisp</h1>
+
+<p>Only the following functions are exported publicly, and namespaced with <code class="language-plaintext highlighter-rouge">(symbols 'bcrypt)</code> (or the prefix: <code class="language-plaintext highlighter-rouge">bcrypt~</code>):</p>
+
+<ul>
+  <li><strong>(gensalt Factor)</strong> generates a salt to be used for hashing a string
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">Factor</code> <em>Number</em>: a Number between 4 and 31, defaults to <code class="language-plaintext highlighter-rouge">12</code> otherwise</li>
+    </ul>
+  </li>
+  <li><strong>(hashpw Passwd Salt)</strong> hashes a string with the salt provided
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">Passwd</code> <em>String</em>: the String to be hashed</li>
+      <li><code class="language-plaintext highlighter-rouge">Salt</code> <em>String</em> or <em>Number (optional)</em>: a hash String or Number used as a cost Factor (will generate a salt automatically if a Number is provided)</li>
+    </ul>
+  </li>
+  <li><strong>(compare Passwd Hash)</strong> a predicate which compares the password and hash. Returns <code class="language-plaintext highlighter-rouge">NIL</code> or <code class="language-plaintext highlighter-rouge">T</code>.
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">Passwd</code> <em>String</em>: the password String</li>
+      <li><code class="language-plaintext highlighter-rouge">Hash</code> <em>String</em>: the hashed String of the password</li>
+    </ul>
+  </li>
+  <li><strong>(timing Factor)</strong> calculates the timing of a password hashing, in seconds. Returns the factor in <code class="language-plaintext highlighter-rouge">car</code> and seconds in <code class="language-plaintext highlighter-rouge">cdr</code></li>
+</ul>
+
+<blockquote>
+  <p><strong>Note:</strong> These functions are not namespace <a href="http://software-lab.de/doc/refL.html#local">local symbols</a>, which means they would redefine symbols with the same name in the <code class="language-plaintext highlighter-rouge">'pico</code> namespace.</p>
+</blockquote>
+
+<h3 id="notes">Notes</h3>
+
+<ul>
+  <li>The default cost Factor is <code class="language-plaintext highlighter-rouge">12</code>.</li>
+  <li>As rule of thumb, when using bcrypt to hash passwords, it should take <em>at least 1 second</em> per hash. Adjust the cost Factor based on the result of a few (timing) runs.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">'InternalError</code> message will be thrown if there’s an error.</li>
+</ul>
+
+<h1 id="examples">Examples</h1>
+
+<h3 id="gensalt-factor">(gensalt Factor)</h3>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">pil</span> <span class="nb">+</span>
+
+<span class="p">(</span><span class="nb">load</span> <span class="s">"bcrypt.l"</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">symbols</span> <span class="ss">'bcrypt</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">gensalt</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"$2a$12$mQn1fUDeEZFW74KD5kU6g."</span>
+
+<span class="p">(</span><span class="nv">gensalt</span> <span class="mi">14</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"$2a$14$kjOSmjZeLsBdru7NRPEmQu"</span>
+</code></pre></div></div>
+
+<h3 id="hashpw-passwd-salt">(hashpw Passwd Salt)</h3>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">pil</span> <span class="nb">+</span>
+
+<span class="p">(</span><span class="nb">load</span> <span class="s">"bcrypt.l"</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">symbols</span> <span class="ss">'bcrypt</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">hashpw</span> <span class="s">"changeme"</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"$2a$12$mmxN/qk8yvfjCx./KXtgfuqnUFsXjYv1ZTZmkMtdQ94rTDngiXpsq"</span>
+
+<span class="p">(</span><span class="nv">hashpw</span> <span class="s">"changeme"</span> <span class="mi">14</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"$2a$14$gZLc8eII8kCbXgFp2rUcv.PPr/oPioojVy0yP0HMU6z2La.v4pEnG"</span>
+
+<span class="p">(</span><span class="nv">hashpw</span> <span class="s">"changeme"</span> <span class="s">"$2a$14$kjOSmjZeLsBdru7NRPEmQu"</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"$2a$14$kjOSmjZeLsBdru7NRPEmQuL5eU5YN4Yb48bD1A0Pxzwu/3G/7kwBy"</span>
+</code></pre></div></div>
+
+<h3 id="compare-passwd-hash">(compare Passwd Hash)</h3>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">pil</span> <span class="nb">+</span>
+
+<span class="p">(</span><span class="nb">load</span> <span class="s">"bcrypt.l"</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">symbols</span> <span class="ss">'bcrypt</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">compare</span> <span class="s">"changeme"</span> <span class="s">"$2a$14$kjOSmjZeLsBdru7NRPEmQuL5eU5YN4Yb48bD1A0Pxzwu/3G/7kwBy"</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="nv">T</span>
+
+<span class="p">(</span><span class="nv">compare</span> <span class="s">"changeme"</span> <span class="s">"$2a$12$2Lgk0P5s5VsxDUM2aa/HFu/6DwHce1lbUwJ1kTm092DwEeDRHHYBy"</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="nv">NIL</span>
+
+<span class="p">(</span><span class="k">catch</span> <span class="ss">'InternalError</span> <span class="p">(</span><span class="nv">compare</span> <span class="s">"changeme"</span> <span class="s">"I have no idea what i'm doing"</span><span class="p">))</span>
+<span class="nv">-&gt;</span> <span class="p">(</span><span class="nv">BcryptError</span> <span class="o">.</span> <span class="s">"Unable to hash password"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="timing-factor">(timing Factor)</h3>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">pil</span> <span class="nb">+</span>
+
+<span class="p">(</span><span class="nb">load</span> <span class="s">"bcrypt.l"</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">symbols</span> <span class="ss">'bcrypt</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">timing</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="p">(</span><span class="mi">12</span> <span class="o">.</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">timing</span> <span class="mi">15</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="p">(</span><span class="mi">15</span> <span class="o">.</span> <span class="mi">4</span><span class="p">)</span>
+</code></pre></div></div>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/10/29/rust/">
+            PicoLisp FFI with Rust
+            <small>29 Oct 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/09/16/posixmq/">
+            POSIX Message Queues library for PicoLisp
+            <small>16 Sep 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/18/supervisor/">
+            Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+            <small>18 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>

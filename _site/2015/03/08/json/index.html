@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      JSON Encoder/Decoder for PicoLisp &middot; PicoLisp Libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">JSON Encoder/Decoder for PicoLisp</h1>
+  <span class="post-date">08 Mar 2015</span>
+  <p>You can <a href="https://github.com/aw/picolisp-json">get it on GitHub</a>.</p>
+
+<p>This library can be used to parse and serialize (encode/decode) JSON strings in <a href="http://picolisp.com/">PicoLisp</a>.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6571543/56e31e44-c701-11e4-99f0-c2c51fd8061b.png" alt="picolisp-json" /></p>
+
+<h1 id="explanation-json-encoderdecoder-for-picolisp">Explanation: JSON Encoder/Decoder for PicoLisp</h1>
+
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-json.git">PicoLisp-JSON</a> encoder/decoder.</p>
+
+<p>It’s split into a few sections for easier reading:</p>
+
+<ol>
+  <li><a href="#global-variables">Global variables</a>: Important variables used throughout the library.</li>
+  <li><a href="#native-calls-ffi-bindings">Native calls (ffi-bindings)</a>: The <code class="language-plaintext highlighter-rouge">Parson</code> native C library, and how it’s used.</li>
+  <li><a href="#internal-functions">Internal functions</a>: Recursion and datatype-checking.
+    <ul>
+      <li><a href="#decoding-json">decoding JSON</a></li>
+      <li><a href="#encoding-json">encoding JSON</a></li>
+    </ul>
+  </li>
+</ol>
+
+<p>Make sure you read the <a href="README.md">README</a> to get an idea of what this library does.</p>
+
+<p>Also, I recommend you read my <a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a> for additional PicoLisp tips and ideas.</p>
+
+<h1 id="global-variables">Global variables</h1>
+
+<p>PicoLisp does not prevent variables from leaking into the global namespace. In order to prevent that, you must use <a href="http://software-lab.de/doc/refL.html#local">local</a> and define exactly what should <em>not</em> affect the global namespace. This is important to avoid un-intended side-effects.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">local</span> <span class="nv">MODULE_INFO</span> <span class="nv">*Json</span> <span class="nv">*JSONError</span> <span class="nv">*JSONNull</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>This will ensure the variables will not affect anything outside their current scope (namespace). It’s similar to <code class="language-plaintext highlighter-rouge">var Myvar;</code> in JavaScript.</p>
+
+<p>A few global variables have been defined at the top of the file.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span>
+  <span class="nv">*Json</span>         <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"lib/libparson.so"</span><span class="p">)</span>
+  <span class="nv">*JSONError</span>    <span class="mi">-1</span>
+  <span class="nv">*JSONNull</span>     <span class="mi">1</span>
+  <span class="nv">*JSONString</span>   <span class="mi">2</span>
+  <span class="nv">*JSONNumber</span>   <span class="mi">3</span>
+  <span class="nv">*JSONObject</span>   <span class="mi">4</span>
+  <span class="nv">*JSONArray</span>    <span class="mi">5</span>
+  <span class="nv">*JSONBoolean</span>  <span class="mi">6</span>
+  <span class="nv">*JSONSuccess</span>  <span class="mi">0</span>
+  <span class="nv">*JSONFailure</span>  <span class="mi">-1</span> <span class="p">)</span>
+</code></pre></div></div>
+
+<p>You’ll notice I’m following the <a href="http://software-lab.de/doc/ref.html#conv">PicoLisp Naming Conventions</a> this time.</p>
+
+<p>The variables prefixed with <code class="language-plaintext highlighter-rouge">*JSON</code> were copied directly from <a href="https://github.com/kgabis/parson/blob/81c2fd0186cafb43c6b4c190b50bb3a4fef1827e/parson.h#L39-L54">Parson’s source code</a>:</p>
+
+<pre><code class="language-C">..
+enum json_value_type {
+    JSONError   = -1,
+    JSONNull    = 1,
+    JSONString  = 2,
+..
+</code></pre>
+
+<p>When working with a native C library in PicoLisp, it’s important to use the same (or very similar) symbol names to avoid confusion.</p>
+
+<h1 id="native-calls-ffi-bindings">Native calls (ffi-bindings)</h1>
+
+<p><a href="https://github.com/kgabis/parson/">Parson</a> is a very simple C library, with functions accepting zero to three arguments, and returning simple validated values and structures.</p>
+
+<p>Example:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">json-type</span> <span class="p">(</span><span class="nv">json-parse-string</span> <span class="s">"{\"Hello\":\"World\"}"</span><span class="p">))</span>
+<span class="nv">-&gt;</span> <span class="mi">4</span>
+</code></pre></div></div>
+
+<p>This returns <code class="language-plaintext highlighter-rouge">4</code> which is <code class="language-plaintext highlighter-rouge">*JSONObject</code> based on our variables defined earlier.</p>
+
+<p>As we’ll see later, our <code class="language-plaintext highlighter-rouge">picolisp-json</code> library can make decisions on how to parse data based on these types of results.</p>
+
+<h1 id="internal-functions">Internal functions</h1>
+
+<p>The meat of this library is in the internal functions. The <code class="language-plaintext highlighter-rouge">(json-parse-string)</code> and <code class="language-plaintext highlighter-rouge">(json-parse-file)</code> functions validate the JSON string. If those calls are successful, then we can safely iterate over the result and generate our own list.</p>
+
+<h2 id="decoding-json">decoding JSON</h2>
+
+<p>We’ll begin by looking at how JSON is decoded in this library.</p>
+
+<h3 id="iterate-object">(iterate-object)</h3>
+
+<p>We’ll first look at the <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function. This is a recursive function which loops and iterates through the results of each native C call, and quickly builds a sexy PicoLisp list.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-object</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">make</span>
+    <span class="p">(</span><span class="k">let</span> <span class="nv">Type</span> <span class="p">(</span><span class="nv">json-type</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb">case</span> <span class="nv">Type</span>  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONArray</span>    <span class="p">(</span><span class="nv">link-json-array</span>  <span class="nv">Value</span><span class="p">))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONObject</span>   <span class="p">(</span><span class="nv">link-json-object</span> <span class="nv">Value</span><span class="p">))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONString</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-string</span>  <span class="nv">Value</span><span class="p">)))</span>
+                  <span class="nv">[</span><span class="o">`</span><span class="nv">*JSONBoolean</span>  <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nb">cond</span>
+                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">1</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'true</span><span class="p">)</span>
+                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">0</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'false</span><span class="p">)</span> <span class="nv">]</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNumber</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-number</span>  <span class="nv">Value</span><span class="p">)))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNull</span>     <span class="p">(</span><span class="nv">chain</span> <span class="ss">'null</span><span class="p">))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>Lots of meat there.</p>
+
+<h3 id="make">(make)</h3>
+
+<p>We’ve seen <a href="http://software-lab.de/doc/refM.html#make">make</a> before, but I didn’t fully explain it.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(make)</code> function is the instigator for building a list. You put it at the top or start of your function, and watch it build lists using <a href="http://software-lab.de/doc/refL.html#link">link</a> and <a href="http://software-lab.de/doc/refC.html#chain">chain</a>.</p>
+
+<p>We use <a href="http://software-lab.de/doc/refC.html#case">case</a> here as our switch statement. This concept is similar in other programming language. This <code class="language-plaintext highlighter-rouge">(case)</code> call compares the <code class="language-plaintext highlighter-rouge">Type</code> value with those defined as global variables. If a match is found, it runs the following expression. Otherwise it returns <code class="language-plaintext highlighter-rouge">NIL</code> (aka: stop looping, i’m done damnit!).</p>
+
+<p>JSON Arrays and Objects are a bit more tricky to parse, so we’ll get to those later. In the case of <code class="language-plaintext highlighter-rouge">String, Boolean, Number or Null</code>, we add them to the list using <code class="language-plaintext highlighter-rouge">(chain)</code>.</p>
+
+<h3 id="link-json-array">(link-json-array)</h3>
+
+<p>When the value is an Array (<code class="language-plaintext highlighter-rouge">Type = 5 = *JSONArray</code>), we loop through it to build a list (arrays are mapped as lists).</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">link-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">json-array</span> <span class="nv">Value</span><span class="p">)</span>
+    <span class="p">(</span><span class="nv">link</span> <span class="nv">T</span><span class="p">)</span>
+    <span class="p">(</span><span class="nv">for</span> <span class="nv">N</span> <span class="p">(</span><span class="nv">json-array-get-count</span> <span class="nv">Arr</span><span class="p">)</span>
+      <span class="p">(</span><span class="k">let</span> <span class="nv">Val</span> <span class="p">(</span><span class="nv">json-array-get-value</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">dec</span> <span class="nv">N</span><span class="p">))</span>
+        <span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>You’ll notice we added <code class="language-plaintext highlighter-rouge">(link T)</code> before the <a href="http://software-lab.de/doc/refF.html#f">for loop</a>. After long discussions with Alexander Burger, it was made clear that a marker is required to differentiate Objects from Arrays (in PicoLisp). We do that by appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(for)</code> loop is rather simple, but in each case we’re obtaining new values by performing native C calls, and then adding to the list using <code class="language-plaintext highlighter-rouge">(link)</code>.</p>
+
+<p>If you’ve had your coffee today, you would notice the <a href="http://software-lab.de/doc/refD.html#dec">dec</a> call. As it turns out, <code class="language-plaintext highlighter-rouge">(for)</code> starts with 1 and counts to the total number of items in the Array. We use <code class="language-plaintext highlighter-rouge">(dec N)</code> to start at 0.</p>
+
+<p>Example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>for N 5
+  N = 1
+  (json-array-get-value Arr 0)
+  ..
+  N = 2
+  (json-array-get-value Arr 1)
+  ..
+</code></pre></div></div>
+
+<p>Finally, the <code class="language-plaintext highlighter-rouge">(link)</code> function makes a call to <code class="language-plaintext highlighter-rouge">(iterate-object)</code>. Remember earlier? when <code class="language-plaintext highlighter-rouge">(link-json-array)</code> was called within <code class="language-plaintext highlighter-rouge">(iterate-object)</code>?</p>
+
+<p><strong>Note:</strong> This is called recursion, where a function calls itself (in our case, with a different value). You can <a href="https://encrypted.google.com/search?hl=en&amp;q=recursion">ask Google</a> about it.</p>
+
+<p>The reason we perform this recursion is in case the value in the array is itself an array or an object. The <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function will simply return a string, boolean, number or null otherwise.</p>
+
+<h3 id="link-json-object">(link-json-object)</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">(link-json-object)</code> is similar to <code class="language-plaintext highlighter-rouge">(link-json-array)</code> except, you guessed it, it loops over objects.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">..</span>
+<span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">Name</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">)))</span>
+<span class="o">..</span>
+</code></pre></div></div>
+
+<p>The other difference is during the <code class="language-plaintext highlighter-rouge">(link)</code> call, it appends a <a href="http://software-lab.de/doc/refC.html#cons">cons</a> pair instead of a single value. We do this because a JSON Object is represented as a <code class="language-plaintext highlighter-rouge">(cons)</code> pair in PicoLisp.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">{</span><span class="s">"hello"</span><span class="err">:</span><span class="s">"world"</span><span class="nv">}</span> <span class="nv">&lt;-&gt;</span> <span class="o">'</span><span class="p">((</span><span class="s">"hello"</span> <span class="o">.</span> <span class="s">"world"</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Of course, this function also recursively calls <code class="language-plaintext highlighter-rouge">(iterate-object)</code>.</p>
+
+<h2 id="encoding-json">encoding JSON</h2>
+
+<p>Decoding was fun, because <code class="language-plaintext highlighter-rouge">Parson</code> did most of the work for us. Encoding is ugly, so I tried to make it as simple and intuitive as possible (less chance for bugs).</p>
+
+<h3 id="iterate-list">(iterate-list)</h3>
+
+<p>Since we now have a friendly JSON string represented as a PicoLisp list, we’ll iterate over it and turn it back into a JSON string.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-list</span> <span class="p">(</span><span class="nv">Item</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="nv">Value</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Item</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">or</span>
+      <span class="p">(</span><span class="nv">get-null</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-boolean</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-number</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-string</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-array</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">make-object</span> <span class="nv">Value</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>This is a bit sneaky, but I :heart: it. I’m not sure how efficient it is either, but it works well, and I’d rather have <em>slow, but valid data</em> than <em>fast, but invalid data</em></p>
+
+<blockquote>
+  <p>It’s not slow, in fact it’s incredibly fast based on my opinion of what fast looks like.</p>
+</blockquote>
+
+<p>This function uses <a href="http://software-lab.de/doc/refO.html#or">or</a> as a conditional statement. The <code class="language-plaintext highlighter-rouge">Value</code> passes through each function to determine the type of value it is, as well as to convert it to a string, number, boolean, null, or whatever.</p>
+
+<h3 id="get-null">(get-null)</h3>
+
+<p>This function does nothing special, but I wanted to show something interesting.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-null</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">==</span> <span class="ss">'null</span> <span class="nv">Value</span><span class="p">)</span> <span class="s">"null"</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>You’ll notice we check if <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">==</code> to <code class="language-plaintext highlighter-rouge">'null</code>. What’s going on here? Using double equal signs checks for <a href="http://software-lab.de/doc/ref.html#cmp"><strong>Pointer equality</strong></a>. This is really important, make sure you understand the difference for a happy PicoLisp life.</p>
+
+<p>This checks if the things we’re comparing are not just equal, but also <em>identical</em>. In other words: Is <code class="language-plaintext highlighter-rouge">null</code> the exact same thing as <code class="language-plaintext highlighter-rouge">null</code> (<code class="language-plaintext highlighter-rouge">Value</code>). Not <code class="language-plaintext highlighter-rouge">"null"</code> or <code class="language-plaintext highlighter-rouge">NULL</code> or any other variation, but <code class="language-plaintext highlighter-rouge">null</code>. Yes. Got it?</p>
+
+<h3 id="get-json-array">(get-json-array)</h3>
+
+<p>You should remember earlier we discussed appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list, in the case of an Array.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">=T</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Value</span><span class="p">))</span> <span class="p">(</span><span class="nb">make-array</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Value</span><span class="p">)))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>What we’re doing here is checking if the <a href="http://software-lab.de/doc/refC.html#car">car</a> of the <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">T</code>. If yes, then call the <code class="language-plaintext highlighter-rouge">(make-array)</code> function.</p>
+
+<h3 id="make-array">(make-array)</h3>
+
+<p>This function builds an Array suitable for JSON.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nb">make-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">pack</span> <span class="s">"["</span>
+        <span class="p">(</span><span class="nv">glue</span> <span class="s">","</span>
+              <span class="p">(</span><span class="nb">mapcar</span>
+                <span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
+                <span class="nv">Value</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="s">"]"</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>We’ve seen what <a href="http://software-lab.de/doc/refP.html#pack">pack</a> does. We use it to build our Array with opening and closing <code class="language-plaintext highlighter-rouge">[]</code> brackets.</p>
+
+<p>The cool thing I discovered recently is <a href="http://software-lab.de/doc/refG.html#glue">glue</a>. It is similar to <code class="language-plaintext highlighter-rouge">Array.join()</code> in Ruby and JavaScript, by concatenating a list with the supplied argument. In our case, it’s a comma <code class="language-plaintext highlighter-rouge">,</code>.</p>
+
+<p>Here we’re doing something a little different.</p>
+
+<p>If you remember <code class="language-plaintext highlighter-rouge">(mapcar)</code>, you’ll know the first argument is a function, but in this code we have this:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
+</code></pre></div></div>
+
+<p>Above is an <strong>anonymous function</strong>. If you’re familiar with Ruby, it looks something like this:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">-&gt;</span><span class="p">(</span><span class="no">N</span><span class="p">)</span> <span class="p">{</span> <span class="n">iterate</span><span class="o">-</span><span class="n">list</span> <span class="p">[</span><span class="kp">nil</span><span class="p">,</span> <span class="no">N</span><span class="p">]</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<p>In the case of PicoLisp, our function that we defined on the fly will be applied to the <code class="language-plaintext highlighter-rouge">Value</code>, but will first make a recursive call to <code class="language-plaintext highlighter-rouge">(iterate-list)</code> with a <code class="language-plaintext highlighter-rouge">(cons)</code> pair as its argument.</p>
+
+<h3 id="make-object">(make-object)</h3>
+
+<p>This function is almost identical to <code class="language-plaintext highlighter-rouge">(make-array)</code>, except it generates a JSON Object using opening and closing <code class="language-plaintext highlighter-rouge">{}</code> braces, of course iterating recursively with <code class="language-plaintext highlighter-rouge">(iterate-list)</code>.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/10/29/rust/">
+            PicoLisp FFI with Rust
+            <small>29 Oct 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/09/16/posixmq/">
+            POSIX Message Queues library for PicoLisp
+            <small>16 Sep 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/18/supervisor/">
+            Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+            <small>18 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>

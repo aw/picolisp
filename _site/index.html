@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      PicoLisp Libraries &middot; AW's collection of PicoLisp libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="posts">
+  
+  <div class="post">
+    <h1 class="post-title">
+      <a href="http://localhost:4000/2020/10/29/rust/">
+        PicoLisp FFI with Rust
+      </a>
+    </h1>
+
+    <span class="post-date">29 Oct 2020</span>
+
+    <p>You can <a href="https://github.com/aw/picolisp-rust">get it on GitHub</a>.</p>
+
+<p>This repo provides a simple example of how to use <a href="https://software-lab.de/down.html">PicoLisp</a> with <a href="https://www.rust-lang.org/tools/install">Rust</a> using PicoLisp’s FFI <code class="language-plaintext highlighter-rouge">(native)</code> functionality.</p>
+
+<h1 id="requirements">Requirements</h1>
+
+<ul>
+  <li>Rustc and Cargo <code class="language-plaintext highlighter-rouge">v1.47.0+</code></li>
+  <li>PicoLisp 64-bit <code class="language-plaintext highlighter-rouge">v17.12+</code> or <code class="language-plaintext highlighter-rouge">pil21</code></li>
+</ul>
+
+<h1 id="getting-started">Getting started</h1>
+
+<p>Once you’ve setup <em>PicoLisp</em> and <em>Rust</em>, simply type <code class="language-plaintext highlighter-rouge">make</code> to build and test the shared library.</p>
+
+<h1 id="output">Output</h1>
+
+<p>Before I explain what’s going on, here’s what the output should look like:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Received struct: PilStruct {
+    byte1: 32,
+    byte2: 33,
+    character1: 67,
+    character2: 68,
+    int: -1,
+    long: 1,
+    string: 0x4847464544434241,
+    array: [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+    ],
+}
+Result code: 0
+Extracted struct:
+(de Extracted (42 43)
+   ("A" "B")
+   65535
+   9223372036854775807
+   "pilrust"
+   (80 105 99 111 76 105 115 112) )
+</code></pre></div></div>
+
+<h1 id="explain">Explain</h1>
+
+<p>The code can be found in <a href="extract.l">extract.l</a> and <a href="src/lib.rs">src/lib.rs</a>. The <em>Rust</em> code is designed as a <strong>shared library</strong> and can be called by PicoLisp’s <strong>(native)</strong> function to pass data to/from between both languages.</p>
+
+<h2 id="picolisp-code-explanation">PicoLisp code explanation</h2>
+
+<p>First, the code allocates 32 bytes of memory, which will be used to store data in a <a href="https://software-lab.de/doc/refS.html#struct">struct</a>.</p>
+
+<p>It then creates a struct named <code class="language-plaintext highlighter-rouge">P</code> with the following specification:</p>
+
+<ul>
+  <li>2 arbitrary bytes</li>
+  <li>2-bytes containing valid UTF-8 characters</li>
+  <li>1x 32-bit (4 bytes) signed integer</li>
+  <li>1x 64-bit (8 bytes) signed long</li>
+  <li>1x 8-byte null-terminated string</li>
+  <li>1x 8-byte arbitrary bytes array</li>
+</ul>
+
+<p>Then the following <a href="https://software-lab.de/doc/refN.html#native">native</a> call is made and its result is stored in the <code class="language-plaintext highlighter-rouge">Res</code> variable:</p>
+
+<pre><code class="language-picolisp">(native "target/debug/libpilrust.so" "extract" 'I P)
+</code></pre>
+
+<p>This calls the <code class="language-plaintext highlighter-rouge">extract</code> function from the <em>Rust</em> library, with the <code class="language-plaintext highlighter-rouge">P</code> struct as its only parameter. It expects a 32-bit signed integer <code class="language-plaintext highlighter-rouge">I</code> as the return value (it will be either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">-1</code>).</p>
+
+<p>Next, the code will extract the <code class="language-plaintext highlighter-rouge">P</code> structure using the specification described above:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(struct P '((B . 2) (C . 2) I N S (B . 8)))
+</code></pre></div></div>
+
+<p>Finally, the code will free the previously allocated memory and print the result of the <code class="language-plaintext highlighter-rouge">P</code> structure.</p>
+
+<p>Some tests run at the end to ensure the data received from <em>Rust</em> is what we expected.</p>
+
+<h3 id="note">Note</h3>
+
+<ul>
+  <li>The values sent to the <em>Rust</em> library will be printed by <em>Rust</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code>.</li>
+  <li>The values received from the <em>Rust</em> library will be printed by <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Extracted struct:</code>.</li>
+</ul>
+
+<h2 id="rust-code-explanation">Rust code explanation</h2>
+
+<p>The <em>Rust</em> code defines the struct for the received data; it is named <code class="language-plaintext highlighter-rouge">PilStruct</code> and contains the exact same specification as the <code class="language-plaintext highlighter-rouge">P</code> struct in the <em>PicoLisp code explanation</em>.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">extract()</code> function creates a new struct in the variable <code class="language-plaintext highlighter-rouge">newstruct</code> which contains some new values, different from what was received by <em>PicoLisp</em>.</p>
+
+<p>Since FFI is considered <a href="https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html">unsafe in <em>Rust</em></a>, the code which actually does the FFI (dereferencing the pointer and writing to it) is contained in an <code class="language-plaintext highlighter-rouge">unsafe</code> block:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>unsafe { ... playing with fire ... }
+</code></pre></div></div>
+
+<p>Luckily, the <em>Rust</em> function checks if the struct is a <strong>null pointer</strong> before trying to work with it, and returns <code class="language-plaintext highlighter-rouge">-1</code> if it is. However it doesn’t check if it’s correctly aligned (it is), so look-out for that!</p>
+
+<p>The code then dereferences the pointer and prints what it received (the entire struct) from <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code> (mentioned earlier).</p>
+
+<p>Finally, it writes the <code class="language-plaintext highlighter-rouge">newstruct</code> struct to the pointer and returns <code class="language-plaintext highlighter-rouge">0</code>. <em>PicoLisp</em> can then read the return code and the new struct data.</p>
+
+<h1 id="thoughts">Thoughts</h1>
+
+<p>There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s <em>not</em> written in <em>C</em> and which works perfectly with <em>PicoLisp</em>.</p>
+
+  </div>
+  
+</div>
+
+    </div>
+
+  </body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      SemVer for PicoLisp &middot; PicoLisp Libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">SemVer for PicoLisp</h1>
+  <span class="post-date">27 Feb 2017</span>
+  <p>You can <a href="https://github.com/aw/picolisp-semver">get it on GitHub</a>.</p>
+
+<p>This library can validate and compare <strong>Major.Minor.Patch</strong> versions (ex: <code class="language-plaintext highlighter-rouge">"1.0.0"</code>).
+It ignores pre-release, build, metadata, and special extensions (ex: <code class="language-plaintext highlighter-rouge">.alpha.1</code>).</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/153401/23364395/ceda769a-fcf6-11e6-9bf6-b7b0b8187f61.png" alt="SemVer PicoLisp test output" /></p>
+
+<h1 id="requirements">Requirements</h1>
+
+<ul>
+  <li><a href="http://picolisp.com">PicoLisp</a> 32-bit or 64-bit v16.12+</li>
+</ul>
+
+<h1 id="usage">Usage</h1>
+
+<ul>
+  <li>Include <code class="language-plaintext highlighter-rouge">semver.l</code> in your application: <code class="language-plaintext highlighter-rouge">(load "semver.l")</code></li>
+  <li>Use one of the 5 public functions listed below</li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Function</th>
+      <th style="text-align: left">Description</th>
+      <th style="text-align: left">Returns</th>
+      <th style="text-align: left">Example</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-format</code></td>
+      <td style="text-align: left">Formats a version string into a list of integers</td>
+      <td style="text-align: left">List of integers</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">(1 4 2)</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-cmp</code></td>
+      <td style="text-align: left">Compares two lists of integers</td>
+      <td style="text-align: left">List containing NIL, 0 or T</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">(NIL 0 T)</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-compare</code></td>
+      <td style="text-align: left">Compares two version strings</td>
+      <td style="text-align: left">NIL, 0, or T</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">NIL</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-compare-slow</code></td>
+      <td style="text-align: left">Compares two version strings using the spaceship <code class="language-plaintext highlighter-rouge">&lt;=&gt;</code></td>
+      <td style="text-align: left">NIL, 0, or T</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">T</code></td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-sort</code></td>
+      <td style="text-align: left">Sorts a list of version strings</td>
+      <td style="text-align: left">List of integers or strings</td>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">((1 3 0) (1 4 0) (1 6 0))</code> or <code class="language-plaintext highlighter-rouge">("1.3.0" "1.4.0" "1.6.0")</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Version comparison is always from left to right.</p>
+
+<p>A brief explanation of the result obtained from <code class="language-plaintext highlighter-rouge">semver-compare</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if left &lt; right then return NIL # left is older
+if left = right then return  0 # left and right are the same
+if left &gt; right then return  T # left is newer
+</code></pre></div></div>
+
+<h1 id="examples">Examples</h1>
+
+<h3 id="1-compare-two-version-strings">1. Compare two version strings</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+
+(semver-compare "1.4.0" "1.5.0")
+-&gt; NIL
+(semver-compare "1.5.0" "1.5.0")
+-&gt; 0
+(semver-compare "1.6.0" "1.5.0")
+-&gt; T
+</code></pre></div></div>
+
+<h3 id="2-format-a-version-string-into-a-list-of-integers">2. Format a version string into a list of integers</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+
+(semver-format "1.4.0")
+-&gt; (1 4 0)
+</code></pre></div></div>
+
+<h3 id="3-compare-two-lists-of-integers">3. Compare two lists of integers</h3>
+
+<ul>
+  <li>The <code class="language-plaintext highlighter-rouge">(car)</code> corresponds to the <code class="language-plaintext highlighter-rouge">major</code></li>
+  <li>The <code class="language-plaintext highlighter-rouge">(cadr)</code> corresponds to the <code class="language-plaintext highlighter-rouge">minor</code></li>
+  <li>The <code class="language-plaintext highlighter-rouge">(caddr)</code> corresponds to the <code class="language-plaintext highlighter-rouge">patch</code></li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+
+(semver-cmp (2 3 2) (1 4 2))
+-&gt; (T NIL 0)
+(semver-cmp (1 5 0) (1 4 2))
+-&gt; (0 T NIL)
+(semver-cmp (2 3 2) (1 4 2))
+-&gt; (T NIL 0)
+</code></pre></div></div>
+
+<h3 id="4-sort-a-list-of-version-strings">4. Sort a list of version strings</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+
+(semver-sort '("1.4.0" "1.6.0" "1.3.0"))
+-&gt; ((1 3 0) (1 4 0) (1 6 0))
+(semver-sort '("1.4.0" "1.6.0" "1.3.0") T)
+-&gt; ("1.3.0" "1.4.0" "1.6.0")
+</code></pre></div></div>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/10/29/rust/">
+            PicoLisp FFI with Rust
+            <small>29 Oct 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/09/16/posixmq/">
+            POSIX Message Queues library for PicoLisp
+            <small>16 Sep 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/18/supervisor/">
+            Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+            <small>18 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>

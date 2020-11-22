@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <!-- Enable responsiveness on mobile devices-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+      Unit Testing framework for PicoLisp &middot; PicoLisp Libraries
+    
+  </title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/public/css/poole.css">
+  <link rel="stylesheet" href="/public/css/syntax.css">
+  <link rel="stylesheet" href="/public/css/hyde.css">
+
+  <!-- Icons -->
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/public/apple-touch-icon-144-precomposed.png">
+                                 <link rel="shortcut icon" href="/public/favicon.ico">
+
+  <!-- RSS -->
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+</head>
+
+
+  <body class="theme-base-aw">
+
+    <div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <h1>
+        <a href="http://localhost:4000">
+          PicoLisp Libraries
+        </a>
+      </h1>
+      <p class="lead"></p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
+          rust
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
+          posixmq
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
+          supervisor
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
+          keyvalue
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/01/02/action/">
+          action
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
+          awscurl
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
+          json-v3
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
+          semver
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
+          unit
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
+          bcrypt
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/16/https/">
+          https
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/03/08/json/">
+          json
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
+          nanomsg
+        </a></li>
+      
+      </ul>
+    </nav>
+
+    <p>This work is created by <a href="https://github.com/aw" target="_blank">@aw</a> and licensed under a Creative Commons Attribution-ShareAlike 4.0 International License</a>.</p>
+  </div>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">Unit Testing framework for PicoLisp</h1>
+  <span class="post-date">18 Mar 2015</span>
+  <p>You can <a href="https://github.com/aw/picolisp-unit">get it on GitHub</a>.</p>
+
+<p>This library can be used for Unit Testing your <a href="http://picolisp.com/">PicoLisp</a> code.</p>
+
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6712097/b1b77e14-cd82-11e4-9603-cae666b8655d.png" alt="picolisp-unit" /></p>
+
+<h1 id="explanation-unit-testing-framework-for-picolisp">Explanation: Unit Testing framework for PicoLisp</h1>
+
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-unit">PicoLisp-Unit</a> testing framework.</p>
+
+<p>I won’t cover concepts which were discussed in previous source code explanations. You can read them here:</p>
+
+<ul>
+  <li><a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a></li>
+  <li><a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md">JSON Explanation</a></li>
+  <li><a href="https://github.com/aw/picolisp-https/blob/master/EXPLAIN.md">HTTPS Explanation</a></li>
+</ul>
+
+<p>This document is split into a few sections:</p>
+
+<ol>
+  <li><a href="#namespace-leaky-globals">Namespace leaky globals</a>: Avoiding side-effects with Namespaces.</li>
+  <li><a href="#internal-functions">Internal functions</a>: System calls and printing data to the terminal.
+    <ul>
+      <li><a href="#system-calls">System calls</a></li>
+      <li><a href="#printing-data">Printing data</a></li>
+    </ul>
+  </li>
+  <li><a href="#public-functions">Public functions</a>: Executing and asserting tests
+    <ul>
+      <li><a href="#executing-tests">Executing a series of tests</a></li>
+      <li><a href="#assertions">Asserting test results</a></li>
+    </ul>
+  </li>
+</ol>
+
+<p>Make sure you read the <a href="README.md">README</a> to get an idea of what this library does.</p>
+
+<h1 id="namespace-leaky-globals">Namespace leaky globals</h1>
+
+<p>Previously, I thought namespaces would protect my variables from modifying the <code class="language-plaintext highlighter-rouge">'pico</code> namespace.</p>
+
+<p><strong>I was wrong</strong>.</p>
+
+<p>Here’s an example:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">:</span> <span class="p">(</span><span class="k">setq</span> <span class="nv">*Myvar</span> <span class="s">"I am a var"</span><span class="p">)</span>
+<span class="err">:</span> <span class="p">(</span><span class="nv">symbols</span> <span class="ss">'mytest</span> <span class="ss">'pico</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="nv">pico</span>
+<span class="nv">mytest:</span> <span class="p">(</span><span class="nv">prinl</span> <span class="nv">*Myvar</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"I am a var"</span>
+
+<span class="err">#</span> <span class="nv">so</span> <span class="nv">far</span> <span class="nv">so</span> <span class="nv">good</span>
+
+<span class="nv">mytest:</span> <span class="p">(</span><span class="k">setq</span> <span class="nv">*Myvar</span> <span class="s">"You are a var"</span><span class="p">)</span>
+<span class="nv">mytest:</span> <span class="p">(</span><span class="nv">symbols</span> <span class="ss">'pico</span><span class="p">)</span>
+<span class="err">:</span> <span class="p">(</span><span class="nv">prinl</span> <span class="nv">*Myvar</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"You are a var"</span>
+</code></pre></div></div>
+
+<p>What? Yes that’s right, the <code class="language-plaintext highlighter-rouge">*Myvar</code> which was originally in the <code class="language-plaintext highlighter-rouge">'pico</code> (default) namespace was modified from within the <code class="language-plaintext highlighter-rouge">'mytest</code> namespace. This is normal, but not expected, and quite dangerous actually.</p>
+
+<h3 id="the-fix">The fix</h3>
+
+<p>PicoLisp provides a nifty <a href="http://software-lab.de/doc/refL.html#local">local</a> function for fixing that. I admit it’s a bit of a pain and quite ugly, but it does the job. You can consider it similar to JavaScript’s <code class="language-plaintext highlighter-rouge">var</code> expression.</p>
+
+<p>Let’s try again:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">:</span> <span class="p">(</span><span class="k">setq</span> <span class="nv">*Myvar</span> <span class="s">"I am a var"</span><span class="p">)</span>
+<span class="err">:</span> <span class="p">(</span><span class="nv">symbols</span> <span class="ss">'mytest</span> <span class="ss">'pico</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="nv">pico</span>
+<span class="nv">mytest:</span> <span class="p">(</span><span class="nv">local</span> <span class="nv">*Myvar</span><span class="p">)</span>
+<span class="nv">mytest:</span> <span class="p">(</span><span class="nv">prinl</span> <span class="nv">*Myvar</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="nv">NIL</span>
+
+<span class="err">#</span> <span class="nv">that</span> <span class="nv">looks</span> <span class="nv">promising</span>
+
+<span class="nv">mytest:</span> <span class="p">(</span><span class="k">setq</span> <span class="nv">*Myvar</span> <span class="s">"You are a var"</span><span class="p">)</span>
+<span class="nv">mytest:</span> <span class="p">(</span><span class="nv">symbols</span> <span class="ss">'pico</span><span class="p">)</span>
+<span class="err">:</span> <span class="p">(</span><span class="nv">prinl</span> <span class="nv">*Myvar</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"I am a var"</span>
+</code></pre></div></div>
+
+<p>This is much better, as we can now guarantee “global” functions and variables will not accidentally create side-effects by overwriting existing functions or variables.</p>
+
+<p>This change has been applied everywhere now, and only public/exported functions can affect the global namespace.</p>
+
+<h1 id="internal-functions">Internal functions</h1>
+
+<p>Here we discuss system calls and printing data to the screen with specific alignment.</p>
+
+<h3 id="system-calls">System calls</h3>
+
+<p>A cool unit-testing framework always displays colours. Just ask anyone from Node.js land.</p>
+
+<p>To achieve this, we make use of an external <a href="http://software-lab.de/doc/refC.html#call">system call</a>, the *NIX <code class="language-plaintext highlighter-rouge">tput</code> command.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">colour</span> <span class="p">(</span><span class="nv">Colour</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">cond</span> <span class="p">((</span><span class="nb">assoc</span> <span class="p">(</span><span class="nv">lowc</span> <span class="nv">Colour</span><span class="p">)</span> <span class="nv">*Colours</span><span class="p">)</span> <span class="p">(</span><span class="nv">call</span> <span class="ss">'tput</span> <span class="s">"setaf"</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">@</span><span class="p">)))</span>
+        <span class="p">((</span><span class="nb">=</span> <span class="p">(</span><span class="nv">lowc</span> <span class="nv">Colour</span><span class="p">)</span> <span class="s">"bold"</span><span class="p">)</span>       <span class="p">(</span><span class="nv">call</span> <span class="ss">'tput</span> <span class="s">"bold"</span><span class="p">))</span>
+        <span class="p">(</span><span class="nv">T</span>                              <span class="p">(</span><span class="nv">call</span> <span class="ss">'tput</span> <span class="s">"sgr0"</span><span class="p">))</span> <span class="p">)</span>
+  <span class="nv">NIL</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>It’s quite simple. The first condition checks if the <code class="language-plaintext highlighter-rouge">Colour</code> is part of the <code class="language-plaintext highlighter-rouge">*Colours</code> list. If yes, use <code class="language-plaintext highlighter-rouge">tput setaf</code> to set the terminal colour.</p>
+
+<p>The second condition checks if the <code class="language-plaintext highlighter-rouge">Colour</code> is <code class="language-plaintext highlighter-rouge">bold</code>. If yes, use <code class="language-plaintext highlighter-rouge">tput bold</code> to set the text to bold.</p>
+
+<p>The default catch-all (<code class="language-plaintext highlighter-rouge">T</code>) resets the terminal back to normal.</p>
+
+<p>I tend to stay away from external system calls as we’re not always sure about the environment. In our case though, colour terminal is not such a big deal, and the <code class="language-plaintext highlighter-rouge">(colour)</code> function will return <code class="language-plaintext highlighter-rouge">NIL</code> whether <code class="language-plaintext highlighter-rouge">tput</code> succedes or fails.</p>
+
+<h3 id="printing-data">Printing data</h3>
+
+<p>Printing data to the screen is simple in PicoLisp, until you realize there are at least 5 known functions to do that: <a href="http://software-lab.de/doc/refP.html#prin">prin</a>, <a href="http://software-lab.de/doc/refP.html#prinl">prinl</a>, <a href="http://software-lab.de/doc/refP.html#print">print</a>, <a href="http://software-lab.de/doc/refP.html#println">println</a>, and <a href="http://software-lab.de/doc/refP.html#printsp">printsp</a>. There’s probably more.</p>
+
+<p>In some cases, using a combination of multiple <em>printing</em> functions can be helpful to achieve your designed results:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">print-expected</span> <span class="p">(</span><span class="nv">Result</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">prin</span> <span class="p">(</span><span class="nv">align</span> <span class="mi">8</span> <span class="s">" "</span><span class="p">)</span>
+        <span class="s">"Expected: "</span>
+        <span class="p">(</span><span class="nv">colour</span> <span class="s">"green"</span><span class="p">)</span> <span class="p">)</span>
+
+  <span class="p">(</span><span class="nv">println</span> <span class="nv">Result</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">colour</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>This has 2 print statements, but it only prints one line. The first uses <a href="http://software-lab.de/doc/refA.html#align">align</a> to align the column to 8 spaces. This is really useful to help keep displayed text aligned in columns. The second prints the result and appends a newline at the end.</p>
+
+<p>An alternative would have been:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">print-expected</span> <span class="p">(</span><span class="nv">Result</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">prin</span> <span class="p">(</span><span class="nv">align</span> <span class="mi">8</span> <span class="s">" "</span><span class="p">)</span>
+        <span class="s">"Expected: "</span>
+        <span class="p">(</span><span class="nv">colour</span> <span class="s">"green"</span><span class="p">)</span>
+        <span class="nv">Result</span>
+        <span class="s">"^J"</span> <span class="p">)</span>
+  <span class="p">(</span><span class="nv">colour</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">^J</code> character gets translated to a newline.</p>
+
+<p>You’ll notice we often call <code class="language-plaintext highlighter-rouge">(colour)</code> without any arguments, to end-up in the <em>catch-all</em> mentioned earlier, which resets the terminal.</p>
+
+<h1 id="public-functions">Public functions</h1>
+
+<p>Public functions do all the work in this library. They execute a series of tests, and they assert results to see if your test should pass or fail.</p>
+
+<p>I’ll admit I was inspired mostly by Ruby’s Minitest framework, which is quite huge compared to this one, but it pretty much does the same thing.</p>
+
+<h3 id="executing-tests">Executing tests</h3>
+
+<p>All good unit tests should be designed to run as <strong>units</strong>. O’Rly? Yeah. This means the order of the tests shouldn’t matter at all. The units should not carry state, and this framework tests for that as well.</p>
+
+<p>The magic happens in a simple <code class="language-plaintext highlighter-rouge">(randomize)</code> function which takes the list of tests to execute, randomizes it, and then returns the list.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">randomize</span> <span class="p">(</span><span class="nv">List</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">if</span> <span class="nv">*My_tests_are_order_dependent</span>
+      <span class="nv">List</span>
+      <span class="p">(</span><span class="nv">by</span> <span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">rand</span> <span class="mi">1</span> <span class="p">(</span><span class="nv">size</span> <span class="nv">List</span><span class="p">)))</span> <span class="nb">sort</span> <span class="nv">List</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>It first checks if the <code class="language-plaintext highlighter-rouge">*My_tests_are_order_dependent</code> variable is <code class="language-plaintext highlighter-rouge">NIL</code> (if it isn’t, don’t randomize).</p>
+
+<p>To randomize, it uses <a href="http://software-lab.de/doc/refB.html#by">by</a>, not to be confused with <code class="language-plaintext highlighter-rouge">(bye)</code> (that would be a major fail), and does stuff with it.</p>
+
+<p>There’s our <em>anonymous function</em> again, used as the 1st argument to <code class="language-plaintext highlighter-rouge">(by)</code>, which is cons’d to the <code class="language-plaintext highlighter-rouge">List</code> (3rd argument), and then applied to the 2nd argument, which is the <a href="http://software-lab.de/doc/refS.html#sort">sort</a> function.</p>
+
+<p>The 1st argument (anonymous function) generates a random number between 1 and the size of the <code class="language-plaintext highlighter-rouge">List</code>.</p>
+
+<p>It’s crazy how that works. I’m not even sure how I came up with that.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">execute</span> <span class="nv">@</span>
+  <span class="p">(</span><span class="nb">mapcar</span>
+    <span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">prin</span> <span class="p">(</span><span class="nv">align</span> <span class="mi">3</span> <span class="p">(</span><span class="nv">inc</span> <span class="ss">'*Counter</span><span class="p">))</span> <span class="s">") "</span><span class="p">)</span> <span class="p">(</span><span class="nb">eval</span> <span class="nv">N</span><span class="p">))</span>
+    <span class="p">(</span><span class="nv">randomize</span> <span class="p">(</span><span class="nb">rest</span><span class="p">))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>Once our list of tests is randomized, we run it through our favourite <a href="http://software-lab.de/doc/refM.html#mapcar">mapcar</a> function which prints the test’s number, stored in <code class="language-plaintext highlighter-rouge">*Counter</code>, aligned to 3 columns, and then evaluates (runs) the test using the infamous <a href="http://software-lab.de/doc/refE.html#eval">eval</a>.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(align 3)</code> allows the test numbers to go from 1 to 999 without breaking the beautiful output. We can increase that when someone actually encounters that problem.</p>
+
+<blockquote>
+  <p><em>*Note:</em> Technically, assertions don’t catch errors, so if your assertion were to throw an unhandled error, then the entire test suite would fail and ugly things will happen. In fact, your terminals colours might not even get reset. That’s a good thing. You should handle your errors.</p>
+</blockquote>
+
+<h3 id="assertions">Assertions</h3>
+
+<p>PicoLisp natively supports assertions, and has a ton of predicates for testing and comparing values.</p>
+
+<p>This library introduces simple wrappers around those predicates, which then call a <code class="language-plaintext highlighter-rouge">(passed)</code> or <code class="language-plaintext highlighter-rouge">(failed)</code> function with additional arguments.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">assert-equal</span> <span class="p">(</span><span class="nv">Expected</span> <span class="nv">Result</span> <span class="nv">Message</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nb">=</span> <span class="nv">Expected</span> <span class="nv">Result</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">passed</span> <span class="nv">Message</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">failed</span> <span class="nv">Expected</span> <span class="nv">Result</span> <span class="nv">Message</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>This one is quite simple, all it does is check if <code class="language-plaintext highlighter-rouge">Expected</code> is equal to <code class="language-plaintext highlighter-rouge">Result</code>.</p>
+
+<p>The <a href="https://github.com/aw/picolisp-unit/blob/master/README.md#assertions-table">other assertions</a> are quite similar and seem to cover most test cases. I’ve considered adding opposite tests such as <code class="language-plaintext highlighter-rouge">refute</code>, but I’ve rarely found a need for them as there are alternate approaches.</p>
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/10/29/rust/">
+            PicoLisp FFI with Rust
+            <small>29 Oct 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/09/16/posixmq/">
+            POSIX Message Queues library for PicoLisp
+            <small>16 Sep 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="http://localhost:4000/2020/06/18/supervisor/">
+            Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+            <small>18 Jun 2020</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+  </body>
+</html>
