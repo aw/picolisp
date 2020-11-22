@@ -4,7 +4,7 @@
  <title>PicoLisp Libraries</title>
  <link href="https://picolisp.a1w.ca/atom.xml" rel="self"/>
  <link href="https://picolisp.a1w.ca/"/>
- <updated>2020-11-22T14:17:29+00:00</updated>
+ <updated>2020-11-22T14:22:29+00:00</updated>
  <id>https://picolisp.a1w.ca</id>
  <author>
    <name>Alexander Williams</name>
@@ -17,7 +17,7 @@
    <link href="https://picolisp.a1w.ca/2020/10/29/rust/"/>
    <updated>2020-10-29T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2020/10/29/rust</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-rust&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-rust&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://www.rust-lang.org/tools/install&quot;&gt;Rust&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
 
@@ -135,7 +135,7 @@ Extracted struct:
    <link href="https://picolisp.a1w.ca/2020/09/16/posixmq/"/>
    <updated>2020-09-16T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2020/09/16/posixmq</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-posixmq&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;&lt;a href=&quot;https://man7.org/linux/man-pages/man7/mq_overview.7.html&quot;&gt;POSIX Message Queues&lt;/a&gt;&lt;/em&gt; provide a dependency-free mechanism for processes to exchange data in the form of messages.&lt;/p&gt;
 
@@ -161,7 +161,7 @@ Extracted struct:
 
 &lt;p&gt;The first step is to run the unit tests: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;make check&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;If those fail, jump to the &lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md&quot;&gt;TUTORIALS&lt;/a&gt; section to perform the initial setup and and system check.&lt;/p&gt;
+&lt;p&gt;If those fail, jump to the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md&quot;&gt;TUTORIALS&lt;/a&gt; section to perform the initial setup and and system check.&lt;/p&gt;
 
 &lt;p&gt;If all works well, then your system is ready to use this library.&lt;/p&gt;
 
@@ -194,13 +194,13 @@ Extracted struct:
 
 &lt;h1 id=&quot;documentation&quot;&gt;Documentation&lt;/h1&gt;
 
-&lt;p&gt;Additional usage and reference documentation can be found in &lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/&quot;&gt;docs/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Additional usage and reference documentation can be found in &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/&quot;&gt;docs/&lt;/a&gt;&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md&quot;&gt;TUTORIALS&lt;/a&gt;: some guides &lt;strong&gt;for beginners&lt;/strong&gt; to get started using this library&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/HOWTO.md&quot;&gt;HOWTO&lt;/a&gt;: a set of recipes for performing more advanced tasks with this library&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/EXPLAIN.md&quot;&gt;EXPLAIN&lt;/a&gt;: an explanation of some key concepts, including how this library works&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-posixmq/blob/master/docs/REFERENCE.md&quot;&gt;REFERENCE&lt;/a&gt;: technical information on the internals of this library&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md&quot;&gt;TUTORIALS&lt;/a&gt;: some guides &lt;strong&gt;for beginners&lt;/strong&gt; to get started using this library&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/HOWTO.md&quot;&gt;HOWTO&lt;/a&gt;: a set of recipes for performing more advanced tasks with this library&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/EXPLAIN.md&quot;&gt;EXPLAIN&lt;/a&gt;: an explanation of some key concepts, including how this library works&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-posixmq/blob/master/docs/REFERENCE.md&quot;&gt;REFERENCE&lt;/a&gt;: technical information on the internals of this library&lt;/li&gt;
 &lt;/ul&gt;
 </content>
  </entry>
@@ -210,7 +210,7 @@ Extracted struct:
    <link href="https://picolisp.a1w.ca/2020/06/18/supervisor/"/>
    <updated>2020-06-18T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2020/06/18/supervisor</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-supervisor&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-supervisor&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of &lt;a href=&quot;https://yhbt.net/unicorn/&quot;&gt;Unicorn&lt;/a&gt;, without being limited to HTTP applications.&lt;/p&gt;
 
@@ -325,7 +325,7 @@ Options:
    <link href="https://picolisp.a1w.ca/2020/06/16/keyvalue/"/>
    <updated>2020-06-16T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2020/06/16/keyvalue</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-kv&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-kv&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of a &lt;a href=&quot;https://redis.io&quot;&gt;Redis™&lt;/a&gt; in-memory database, but is designed specifically for &lt;a href=&quot;https://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt; applications with optional on-disk persistence and encryption.&lt;/p&gt;
 
@@ -405,7 +405,7 @@ Options:
 -&amp;gt; &quot;12345&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Feel free to observe the example code in &lt;a href=&quot;https://github.com/aw/picolisp-kv/blob/master/client.l&quot;&gt;client.l&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Feel free to observe the example code in &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-kv/blob/master/client.l&quot;&gt;client.l&lt;/a&gt;.&lt;/p&gt;
 
 &lt;blockquote&gt;
   &lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: Using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-send-data)&lt;/code&gt; will send the data to the server and automatically block the client while waiting for a response.&lt;/p&gt;
@@ -666,10 +666,10 @@ COMMAND LIST              Commands are case-insensitive and don't always require
    <link href="https://picolisp.a1w.ca/2020/01/02/action/"/>
    <updated>2020-01-02T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2020/01/02/action</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-action&quot;&gt;get it on GitHub&lt;/a&gt; or the &lt;a href=&quot;https://github.com/marketplace/actions/picolisp-action&quot;&gt;GitHub Marketplace&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-action&quot;&gt;get it on my Git server&lt;/a&gt; or the &lt;a href=&quot;https://github.com/marketplace/actions/picolisp-action&quot;&gt;GitHub Marketplace&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This action downloads, compiles, and globally installs PicoLisp.
-It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/aw/picolisp-unit&quot;&gt;units tests&lt;/a&gt;.&lt;/p&gt;
+It can be used to run PicoLisp code such as &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-unit&quot;&gt;units tests&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;https://user-images.githubusercontent.com/153401/70022112-e4695580-158a-11ea-886d-0db01dbe7a66.png&quot; alt=&quot;Example PicoLisp tests&quot; /&gt;&lt;/p&gt;
 
@@ -696,7 +696,7 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
 
 &lt;h2 id=&quot;example-workflow&quot;&gt;Example workflow&lt;/h2&gt;
 
-&lt;p&gt;See the &lt;a href=&quot;https://github.com/aw/picolisp-json/blob/master/.github/workflows/main.yml&quot;&gt;picolisp-json workflow&lt;/a&gt; for a more detailed usage example.&lt;/p&gt;
+&lt;p&gt;See the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/master/.github/workflows/main.yml&quot;&gt;picolisp-json workflow&lt;/a&gt; for a more detailed usage example.&lt;/p&gt;
 
 &lt;h2 id=&quot;code&quot;&gt;Code&lt;/h2&gt;
 
@@ -730,11 +730,11 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
    <link href="https://picolisp.a1w.ca/2019/03/15/awscurl/"/>
    <updated>2019-03-15T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2019/03/15/awscurl</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-awscurl&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-awscurl&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This command line tool can be used to sign &lt;a href=&quot;https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html&quot;&gt;AWS Signature Version 4&lt;/a&gt; requests and make calls to various AWS APIs.&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://github.com/aw/picolisp-awscurl&quot;&gt;&lt;img src=&quot;https://img.shields.io/github/release/aw/picolisp-awscurl.svg&quot; alt=&quot;GitHub release&quot; /&gt;&lt;/a&gt; &lt;a href=&quot;https://github.com/aw/picolisp-unit.git&quot;&gt;&lt;img src=&quot;https://img.shields.io/badge/[deps]&amp;#32;picolisp--unit-v3.0.0-ff69b4.svg&quot; alt=&quot;Dependency&quot; /&gt;&lt;/a&gt; &lt;img src=&quot;https://github.com/aw/picolisp-awscurl/workflows/CI/badge.svg?branch=master&quot; alt=&quot;Build status&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-awscurl&quot;&gt;&lt;img src=&quot;https://img.shields.io/github/release/aw/picolisp-awscurl.svg&quot; alt=&quot;GitHub release&quot; /&gt;&lt;/a&gt; &lt;a href=&quot;https://github.com/aw/picolisp-unit.git&quot;&gt;&lt;img src=&quot;https://img.shields.io/badge/[deps]&amp;#32;picolisp--unit-v3.0.0-ff69b4.svg&quot; alt=&quot;Dependency&quot; /&gt;&lt;/a&gt; &lt;img src=&quot;https://github.com/aw/picolisp-awscurl/workflows/CI/badge.svg?branch=master&quot; alt=&quot;Build status&quot; /&gt;&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;&lt;a href=&quot;#requirements&quot;&gt;Requirements&lt;/a&gt;&lt;/li&gt;
@@ -745,7 +745,7 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
 &lt;h1 id=&quot;requirements&quot;&gt;Requirements&lt;/h1&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;picolisp&lt;/code&gt;: 32-bit or 64-bit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v3.1.11+&lt;/code&gt;, tested up to PicoLisp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v20.6.29&lt;/code&gt;, &lt;a href=&quot;https://github.com/aw/picolisp-awscurl/actions/&quot;&gt;see test runs&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;picolisp&lt;/code&gt;: 32-bit or 64-bit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v3.1.11+&lt;/code&gt;, tested up to PicoLisp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v20.6.29&lt;/code&gt;, &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-awscurl/actions/&quot;&gt;see test runs&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;libcrypto.so&lt;/code&gt;: for using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--native&lt;/code&gt; functions with PicoLisp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v17.12+&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;picolisp-unit&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v3.0.0+&lt;/code&gt; for testing the library&lt;/li&gt;
   &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;openssl&lt;/code&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v1.0.0+&lt;/code&gt; for signing and hashing strings&lt;/li&gt;
@@ -760,7 +760,7 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
 
 &lt;h2 id=&quot;warning&quot;&gt;WARNING&lt;/h2&gt;
 
-&lt;p&gt;There is currently &lt;strong&gt;no validation&lt;/strong&gt; on command line arguments. Be careful the input you provide. &lt;a href=&quot;https://github.com/aw/picolisp-awscurl/issues/1&quot;&gt;See issue #1&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;There is currently &lt;strong&gt;no validation&lt;/strong&gt; on command line arguments. Be careful the input you provide. &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-awscurl/issues/1&quot;&gt;See issue #1&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;environment-variables&quot;&gt;Environment variables&lt;/h3&gt;
 
@@ -831,7 +831,7 @@ Options:
    <link href="https://picolisp.a1w.ca/2018/05/11/json-v3/"/>
    <updated>2018-05-11T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2018/05/11/json-v3</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
 
@@ -839,9 +839,9 @@ Options:
 
 &lt;h1 id=&quot;explanation-json-encoderdecoder-in-pure-picolisp&quot;&gt;Explanation: JSON Encoder/Decoder in pure PicoLisp&lt;/h1&gt;
 
-&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://github.com/aw/picolisp-json.git&quot;&gt;PicoLisp-JSON&lt;/a&gt; encoder/decoder.&lt;/p&gt;
+&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json.git&quot;&gt;PicoLisp-JSON&lt;/a&gt; encoder/decoder.&lt;/p&gt;
 
-&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This document covers &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v3&lt;/code&gt; of the JSON library. To view the older (C/ffi bindings) version &lt;a href=&quot;https://github.com/aw/picolisp-json/blob/v2.2.0/EXPLAIN.md&quot;&gt;click here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This document covers &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v3&lt;/code&gt; of the JSON library. To view the older (C/ffi bindings) version &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/v2.2.0/EXPLAIN.md&quot;&gt;click here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;It’s split into a few sections for easier reading:&lt;/p&gt;
 
@@ -1054,7 +1054,7 @@ In other words, our tokenized &lt;code class=&quot;language-plaintext highlighte
 
 &lt;h2 id=&quot;encoding-json&quot;&gt;encoding JSON&lt;/h2&gt;
 
-&lt;p&gt;The code for encoding JSON strings hasn’t changed, so feel free to &lt;a href=&quot;https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md#encoding-json&quot;&gt;read about it here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The code for encoding JSON strings hasn’t changed, so feel free to &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md#encoding-json&quot;&gt;read about it here&lt;/a&gt;.&lt;/p&gt;
 </content>
  </entry>
  
@@ -1063,7 +1063,7 @@ In other words, our tokenized &lt;code class=&quot;language-plaintext highlighte
    <link href="https://picolisp.a1w.ca/2017/02/27/semver/"/>
    <updated>2017-02-27T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2017/02/27/semver</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-semver&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-semver&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can validate and compare &lt;strong&gt;Major.Minor.Patch&lt;/strong&gt; versions (ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;1.0.0&quot;&lt;/code&gt;).
 It ignores pre-release, build, metadata, and special extensions (ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.alpha.1&lt;/code&gt;).&lt;/p&gt;
@@ -1192,7 +1192,7 @@ if left &amp;gt; right then return  T # left is newer
    <link href="https://picolisp.a1w.ca/2015/03/18/unit/"/>
    <updated>2015-03-18T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2015/03/18/unit</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-unit&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-unit&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used for Unit Testing your &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt; code.&lt;/p&gt;
 
@@ -1200,14 +1200,14 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;h1 id=&quot;explanation-unit-testing-framework-for-picolisp&quot;&gt;Explanation: Unit Testing framework for PicoLisp&lt;/h1&gt;
 
-&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://github.com/aw/picolisp-unit&quot;&gt;PicoLisp-Unit&lt;/a&gt; testing framework.&lt;/p&gt;
+&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-unit&quot;&gt;PicoLisp-Unit&lt;/a&gt; testing framework.&lt;/p&gt;
 
 &lt;p&gt;I won’t cover concepts which were discussed in previous source code explanations. You can read them here:&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md&quot;&gt;JSON Explanation&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-https/blob/master/EXPLAIN.md&quot;&gt;HTTPS Explanation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md&quot;&gt;JSON Explanation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-https/blob/master/EXPLAIN.md&quot;&gt;HTTPS Explanation&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;This document is split into a few sections:&lt;/p&gt;
@@ -1392,7 +1392,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;p&gt;This one is quite simple, all it does is check if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Expected&lt;/code&gt; is equal to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Result&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;The &lt;a href=&quot;https://github.com/aw/picolisp-unit/blob/master/README.md#assertions-table&quot;&gt;other assertions&lt;/a&gt; are quite similar and seem to cover most test cases. I’ve considered adding opposite tests such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;refute&lt;/code&gt;, but I’ve rarely found a need for them as there are alternate approaches.&lt;/p&gt;
+&lt;p&gt;The &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-unit/blob/master/README.md#assertions-table&quot;&gt;other assertions&lt;/a&gt; are quite similar and seem to cover most test cases. I’ve considered adding opposite tests such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;refute&lt;/code&gt;, but I’ve rarely found a need for them as there are alternate approaches.&lt;/p&gt;
 </content>
  </entry>
  
@@ -1401,7 +1401,7 @@ if left &amp;gt; right then return  T # left is newer
    <link href="https://picolisp.a1w.ca/2015/03/17/bcrypt/"/>
    <updated>2015-03-17T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2015/03/17/bcrypt</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-bcrypt&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-bcrypt&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to hash strings (ex: passwords) using bcrypt in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
 
@@ -1515,7 +1515,7 @@ if left &amp;gt; right then return  T # left is newer
    <link href="https://picolisp.a1w.ca/2015/03/16/https/"/>
    <updated>2015-03-16T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2015/03/16/https</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-https&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-https&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to make HTTP and HTTPS requests in &lt;a href=&quot;http://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt;, with support for authentication.&lt;/p&gt;
 
@@ -1523,13 +1523,13 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;h1 id=&quot;explanation-https-client-for-picolisp&quot;&gt;Explanation: HTTP(S) client for PicoLisp&lt;/h1&gt;
 
-&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://github.com/aw/picolisp-https.git&quot;&gt;PicoLisp-HTTPS&lt;/a&gt; client.&lt;/p&gt;
+&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-https.git&quot;&gt;PicoLisp-HTTPS&lt;/a&gt; client.&lt;/p&gt;
 
 &lt;p&gt;I won’t cover concepts which were covered in previous source code explanations. You can read them here:&lt;/p&gt;
 
 &lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md&quot;&gt;JSON Explanation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md&quot;&gt;JSON Explanation&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;This document is split into a few sections:&lt;/p&gt;
@@ -1695,7 +1695,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;p&gt;The &lt;a href=&quot;http://software-lab.de/doc/refL.html#lisp&quot;&gt;lisp&lt;/a&gt; function is quite special. When using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; for C calls, certain functions require a callback as an argument, or “function pointer” (Google it).&lt;/p&gt;
 
-&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(ne-set-server-auth)&lt;/code&gt; function requires a callback as its second argument, so we create one using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(lisp)&lt;/code&gt;. If you’ve read the &lt;a href=&quot;https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md#make-array&quot;&gt;JSON explanations&lt;/a&gt;, you’ll quickly notice there’s an anonymous function in this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(lisp)&lt;/code&gt; call. It essentially sends 5 arguments (which are numbers) to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(do-auth)&lt;/code&gt; function, under the name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ne_auth_creds&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(ne-set-server-auth)&lt;/code&gt; function requires a callback as its second argument, so we create one using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(lisp)&lt;/code&gt;. If you’ve read the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md#make-array&quot;&gt;JSON explanations&lt;/a&gt;, you’ll quickly notice there’s an anonymous function in this &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(lisp)&lt;/code&gt; call. It essentially sends 5 arguments (which are numbers) to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(do-auth)&lt;/code&gt; function, under the name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ne_auth_creds&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;Here’s the C code to give a better picture:&lt;/p&gt;
 
@@ -1719,7 +1719,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
   &lt;span class=&quot;nv&quot;&gt;Attempt&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;Whoa wait, what’s that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@&lt;/code&gt; thing doing there? Remember we talked about the &lt;a href=&quot;https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md#nn_symbols&quot;&gt;@ result&lt;/a&gt;? Well, this is &lt;strong&gt;NOT&lt;/strong&gt; that.&lt;/p&gt;
+&lt;p&gt;Whoa wait, what’s that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;@&lt;/code&gt; thing doing there? Remember we talked about the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md#nn_symbols&quot;&gt;@ result&lt;/a&gt;? Well, this is &lt;strong&gt;NOT&lt;/strong&gt; that.&lt;/p&gt;
 
 &lt;p&gt;This is actually a &lt;a href=&quot;http://software-lab.de/doc/native.html#libs&quot;&gt;transient symbol&lt;/a&gt; which refers to the main program (PicoLisp).&lt;/p&gt;
 
@@ -1937,7 +1937,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
    <link href="https://picolisp.a1w.ca/2015/03/08/json/"/>
    <updated>2015-03-08T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2015/03/08/json</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
 
@@ -1945,7 +1945,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
 
 &lt;h1 id=&quot;explanation-json-encoderdecoder-for-picolisp&quot;&gt;Explanation: JSON Encoder/Decoder for PicoLisp&lt;/h1&gt;
 
-&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://github.com/aw/picolisp-json.git&quot;&gt;PicoLisp-JSON&lt;/a&gt; encoder/decoder.&lt;/p&gt;
+&lt;p&gt;This document provides a short walkthrough of the source code for the &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-json.git&quot;&gt;PicoLisp-JSON&lt;/a&gt; encoder/decoder.&lt;/p&gt;
 
 &lt;p&gt;It’s split into a few sections for easier reading:&lt;/p&gt;
 
@@ -1962,7 +1962,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
 
 &lt;p&gt;Make sure you read the &lt;a href=&quot;README.md&quot;&gt;README&lt;/a&gt; to get an idea of what this library does.&lt;/p&gt;
 
-&lt;p&gt;Also, I recommend you read my &lt;a href=&quot;https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt; for additional PicoLisp tips and ideas.&lt;/p&gt;
+&lt;p&gt;Also, I recommend you read my &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md&quot;&gt;Nanomsg Explanation&lt;/a&gt; for additional PicoLisp tips and ideas.&lt;/p&gt;
 
 &lt;h1 id=&quot;global-variables&quot;&gt;Global variables&lt;/h1&gt;
 
@@ -2195,7 +2195,7 @@ enum json_value_type {
    <link href="https://picolisp.a1w.ca/2015/02/22/nanomsg/"/>
    <updated>2015-02-22T00:00:00+00:00</updated>
    <id>https://picolisp.a1w.ca/2015/02/22/nanomsg</id>
-   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-nanomsg&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://git.a1w.ca/aw/picolisp-nanomsg&quot;&gt;get it on my Git server&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h1 id=&quot;picolisp-nanomsg-explanation&quot;&gt;PicoLisp-Nanomsg Explanation&lt;/h1&gt;
 

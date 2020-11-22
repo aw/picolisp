@@ -4,7 +4,7 @@ name: supervisor
 title: Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
 ---
 
-You can [get it on GitHub](https://github.com/aw/picolisp-supervisor).
+You can [get it on my Git server](https://git.a1w.ca/aw/picolisp-supervisor).
 
 This program mimics functionality of [Unicorn](https://yhbt.net/unicorn/), without being limited to HTTP applications.
 
