@@ -13,10 +13,10 @@ url:              https://picolisp.a1w.ca
 
 author:
   name:           'Alexander Williams'
-  url:            https://git.a1w.ca/aw
+  url:            https://github.com/aw
 
 paginate:         1
 
 # Custom vars
 github:
-  repo:           https://git.a1w.ca/aw/picolisp
+  repo:           https://github.com/aw/picolisp
