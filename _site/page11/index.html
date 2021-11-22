@@ -117,7 +117,7 @@
 
     <span class="post-date">16 Mar 2015</span>
 
-    <p>You can <a href="https://git.a1w.ca/aw/picolisp-https">get it on my Git server</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-https">get it on GitHub</a>.</p>
 
 <p>This library can be used to make HTTP and HTTPS requests in <a href="http://picolisp.com">PicoLisp</a>, with support for authentication.</p>
 
@@ -125,13 +125,13 @@
 
 <h1 id="explanation-https-client-for-picolisp">Explanation: HTTP(S) client for PicoLisp</h1>
 
-<p>This document provides a short walkthrough of the source code for the <a href="https://git.a1w.ca/aw/picolisp-https.git">PicoLisp-HTTPS</a> client.</p>
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-https.git">PicoLisp-HTTPS</a> client.</p>
 
 <p>I won’t cover concepts which were covered in previous source code explanations. You can read them here:</p>
 
 <ul>
-  <li><a href="https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a></li>
-  <li><a href="https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md">JSON Explanation</a></li>
+  <li><a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a></li>
+  <li><a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md">JSON Explanation</a></li>
 </ul>
 
 <p>This document is split into a few sections:</p>
@@ -297,7 +297,7 @@
 
 <p>The <a href="http://software-lab.de/doc/refL.html#lisp">lisp</a> function is quite special. When using <code class="language-plaintext highlighter-rouge">(native)</code> for C calls, certain functions require a callback as an argument, or “function pointer” (Google it).</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">(ne-set-server-auth)</code> function requires a callback as its second argument, so we create one using <code class="language-plaintext highlighter-rouge">(lisp)</code>. If you’ve read the <a href="https://git.a1w.ca/aw/picolisp-json/blob/master/EXPLAIN.md#make-array">JSON explanations</a>, you’ll quickly notice there’s an anonymous function in this <code class="language-plaintext highlighter-rouge">(lisp)</code> call. It essentially sends 5 arguments (which are numbers) to the <code class="language-plaintext highlighter-rouge">(do-auth)</code> function, under the name <code class="language-plaintext highlighter-rouge">ne_auth_creds</code>.</p>
+<p>The <code class="language-plaintext highlighter-rouge">(ne-set-server-auth)</code> function requires a callback as its second argument, so we create one using <code class="language-plaintext highlighter-rouge">(lisp)</code>. If you’ve read the <a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md#make-array">JSON explanations</a>, you’ll quickly notice there’s an anonymous function in this <code class="language-plaintext highlighter-rouge">(lisp)</code> call. It essentially sends 5 arguments (which are numbers) to the <code class="language-plaintext highlighter-rouge">(do-auth)</code> function, under the name <code class="language-plaintext highlighter-rouge">ne_auth_creds</code>.</p>
 
 <p>Here’s the C code to give a better picture:</p>
 
@@ -321,7 +321,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
   <span class="nv">Attempt</span> <span class="p">)</span>
 </code></pre></div></div>
 
-<p>Whoa wait, what’s that <code class="language-plaintext highlighter-rouge">@</code> thing doing there? Remember we talked about the <a href="https://git.a1w.ca/aw/picolisp-nanomsg/blob/master/EXPLAIN.md#nn_symbols">@ result</a>? Well, this is <strong>NOT</strong> that.</p>
+<p>Whoa wait, what’s that <code class="language-plaintext highlighter-rouge">@</code> thing doing there? Remember we talked about the <a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md#nn_symbols">@ result</a>? Well, this is <strong>NOT</strong> that.</p>
 
 <p>This is actually a <a href="http://software-lab.de/doc/native.html#libs">transient symbol</a> which refers to the main program (PicoLisp).</p>
 
