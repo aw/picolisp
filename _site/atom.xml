@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>PicoLisp Libraries</title>
- <link href="https://picolisp.a1w.ca/atom.xml" rel="self"/>
- <link href="https://picolisp.a1w.ca/"/>
- <updated>2020-11-22T14:17:29+00:00</updated>
- <id>https://picolisp.a1w.ca</id>
+ <link href="http://localhost:4000/atom.xml" rel="self"/>
+ <link href="http://localhost:4000/"/>
+ <updated>2023-01-09T10:12:10+09:00</updated>
+ <id>http://localhost:4000</id>
  <author>
    <name>Alexander Williams</name>
    <email></email>
@@ -13,10 +13,107 @@
 
  
  <entry>
+   <title>PicoLisp FFI with Zig</title>
+   <link href="http://localhost:4000/2023/01/09/zig/"/>
+   <updated>2023-01-09T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2023/01/09/zig</id>
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-zig&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://ziglang.org/download/&quot;&gt;Zig&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
+
+&lt;p&gt;This is similar to &lt;a href=&quot;https://github.com/aw/picolisp-rust&quot;&gt;picolisp-rust&lt;/a&gt; except written for &lt;em&gt;Zig&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;requirements&quot;&gt;Requirements&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Zig &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v0.6+&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;PicoLisp 64-bit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v17.12+&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pil21&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;getting-started&quot;&gt;Getting started&lt;/h1&gt;
+
+&lt;p&gt;Once you’ve setup &lt;em&gt;PicoLisp&lt;/em&gt; and &lt;em&gt;Zig&lt;/em&gt;, simply type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;make&lt;/code&gt; to build and test the shared library.&lt;/p&gt;
+
+&lt;h1 id=&quot;output&quot;&gt;Output&lt;/h1&gt;
+
+&lt;p&gt;Before I explain what’s going on, here’s what the output should look like:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Received struct: pil.PilStruct{ .byte1 = 32, .byte2 = 33, .character1 = 67, .character2 = 68, .int = -1, .long = 1, .string = u8@4847464544434241, .array = { 1, 2, 3, 4, 5, 6, 7, 8 } }
+Result code: 0
+Extracted struct: 
+(de Extracted (42 43)
+   (&quot;A&quot; &quot;B&quot;)
+   65535
+   9223372036854775807
+   &quot;pilzig&quot;
+   (80 105 99 111 76 105 115 112) )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;explain&quot;&gt;Explain&lt;/h1&gt;
+
+&lt;p&gt;The code can be found in &lt;a href=&quot;extract.l&quot;&gt;extract.l&lt;/a&gt; and &lt;a href=&quot;pil.zig&quot;&gt;pil.zig&lt;/a&gt;. The &lt;em&gt;Zig&lt;/em&gt; code is designed as a &lt;strong&gt;shared library&lt;/strong&gt; and can be called by PicoLisp’s &lt;strong&gt;(native)&lt;/strong&gt; function to pass data to/from between both languages.&lt;/p&gt;
+
+&lt;h2 id=&quot;picolisp-code-explanation&quot;&gt;PicoLisp code explanation&lt;/h2&gt;
+
+&lt;p&gt;First, the code allocates 32 bytes of memory, which will be used to store data in a &lt;a href=&quot;https://software-lab.de/doc/refS.html#struct&quot;&gt;struct&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;It then creates a struct named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; with the following specification:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2 arbitrary bytes&lt;/li&gt;
+  &lt;li&gt;2-bytes containing valid UTF-8 characters&lt;/li&gt;
+  &lt;li&gt;1x 32-bit (4 bytes) signed integer&lt;/li&gt;
+  &lt;li&gt;1x 64-bit (8 bytes) signed long&lt;/li&gt;
+  &lt;li&gt;1x 8-byte null-terminated string&lt;/li&gt;
+  &lt;li&gt;1x 8-byte arbitrary bytes array&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Then the following &lt;a href=&quot;https://software-lab.de/doc/refN.html#native&quot;&gt;native&lt;/a&gt; call is made and its result is stored in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Res&lt;/code&gt; variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;./libpil.so&quot; &quot;extract&quot; 'I P)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This calls the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract&lt;/code&gt; function from the &lt;em&gt;Zig&lt;/em&gt; library, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct as its only parameter. It expects a 32-bit signed integer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;I&lt;/code&gt; as the return value (it will be either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Next, the code will extract the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure using the specification described above:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P '((B . 2) (C . 2) I N S (B . 8)))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally, the code will free the previously allocated memory and print the result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure.&lt;/p&gt;
+
+&lt;p&gt;Some tests run at the end to ensure the data received from &lt;em&gt;Zig&lt;/em&gt; is what we expected.&lt;/p&gt;
+
+&lt;h3 id=&quot;note&quot;&gt;Note&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The values sent to the &lt;em&gt;Zig&lt;/em&gt; library will be printed by &lt;em&gt;Zig&lt;/em&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Received struct:&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;The values received from the &lt;em&gt;Zig&lt;/em&gt; library will be printed by &lt;em&gt;PicoLisp&lt;/em&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Extracted struct:&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;zig-code-explanation&quot;&gt;Zig code explanation&lt;/h2&gt;
+
+&lt;p&gt;The &lt;em&gt;Zig&lt;/em&gt; code defines the struct for the received data; it is named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PilStruct&lt;/code&gt; and contains the exact same specification as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct in the &lt;em&gt;PicoLisp code explanation&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract()&lt;/code&gt; function creates a new struct in the variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;newstruct&lt;/code&gt; which contains some new values, different from what was received by &lt;em&gt;PicoLisp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Luckily, the &lt;em&gt;Zig&lt;/em&gt; pointers &lt;a href=&quot;https://ziglang.org/learn/overview/#optional-type-instead-of-null-pointers&quot;&gt;cannot be &lt;strong&gt;null&lt;/strong&gt;&lt;/a&gt; so there’s no need to check for that.&lt;/p&gt;
+
+&lt;p&gt;The code then dereferences the pointer and prints what it received (the entire struct) from &lt;em&gt;PicoLisp&lt;/em&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Received struct:&lt;/code&gt; (mentioned earlier).&lt;/p&gt;
+
+&lt;p&gt;Finally, it writes the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;newstruct&lt;/code&gt; struct to the pointer and returns &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt;. &lt;em&gt;PicoLisp&lt;/em&gt; can then read the return code and the new struct data.&lt;/p&gt;
+
+&lt;h1 id=&quot;thoughts&quot;&gt;Thoughts&lt;/h1&gt;
+
+&lt;p&gt;There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s &lt;em&gt;not&lt;/em&gt; written in &lt;em&gt;C&lt;/em&gt; or &lt;em&gt;Rust&lt;/em&gt; and which works perfectly with &lt;em&gt;PicoLisp&lt;/em&gt;.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
    <title>PicoLisp FFI with Rust</title>
-   <link href="https://picolisp.a1w.ca/2020/10/29/rust/"/>
-   <updated>2020-10-29T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2020/10/29/rust</id>
+   <link href="http://localhost:4000/2020/10/29/rust/"/>
+   <updated>2020-10-29T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2020/10/29/rust</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-rust&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://www.rust-lang.org/tools/install&quot;&gt;Rust&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
@@ -132,9 +229,9 @@ Extracted struct:
  
  <entry>
    <title>POSIX Message Queues library for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2020/09/16/posixmq/"/>
-   <updated>2020-09-16T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2020/09/16/posixmq</id>
+   <link href="http://localhost:4000/2020/09/16/posixmq/"/>
+   <updated>2020-09-16T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2020/09/16/posixmq</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-posixmq&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;&lt;a href=&quot;https://man7.org/linux/man-pages/man7/mq_overview.7.html&quot;&gt;POSIX Message Queues&lt;/a&gt;&lt;/em&gt; provide a dependency-free mechanism for processes to exchange data in the form of messages.&lt;/p&gt;
@@ -207,9 +304,9 @@ Extracted struct:
  
  <entry>
    <title>Unicorn-inspired PicoLisp daemon to spawn and manage worker processes</title>
-   <link href="https://picolisp.a1w.ca/2020/06/18/supervisor/"/>
-   <updated>2020-06-18T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2020/06/18/supervisor</id>
+   <link href="http://localhost:4000/2020/06/18/supervisor/"/>
+   <updated>2020-06-18T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2020/06/18/supervisor</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-supervisor&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of &lt;a href=&quot;https://yhbt.net/unicorn/&quot;&gt;Unicorn&lt;/a&gt;, without being limited to HTTP applications.&lt;/p&gt;
@@ -322,9 +419,9 @@ Options:
  
  <entry>
    <title>Redis-inspired key/value store written in PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2020/06/16/keyvalue/"/>
-   <updated>2020-06-16T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2020/06/16/keyvalue</id>
+   <link href="http://localhost:4000/2020/06/16/keyvalue/"/>
+   <updated>2020-06-16T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2020/06/16/keyvalue</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-kv&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of a &lt;a href=&quot;https://redis.io&quot;&gt;Redis™&lt;/a&gt; in-memory database, but is designed specifically for &lt;a href=&quot;https://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt; applications with optional on-disk persistence and encryption.&lt;/p&gt;
@@ -663,9 +760,9 @@ COMMAND LIST              Commands are case-insensitive and don't always require
  
  <entry>
    <title>GitHub Action to run 32-bit or 64-bit PicoLisp code</title>
-   <link href="https://picolisp.a1w.ca/2020/01/02/action/"/>
-   <updated>2020-01-02T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2020/01/02/action</id>
+   <link href="http://localhost:4000/2020/01/02/action/"/>
+   <updated>2020-01-02T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2020/01/02/action</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-action&quot;&gt;get it on GitHub&lt;/a&gt; or the &lt;a href=&quot;https://github.com/marketplace/actions/picolisp-action&quot;&gt;GitHub Marketplace&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This action downloads, compiles, and globally installs PicoLisp.
@@ -727,9 +824,9 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
  
  <entry>
    <title>PicoLisp AWS CLI tool using OpenSSL and Curl</title>
-   <link href="https://picolisp.a1w.ca/2019/03/15/awscurl/"/>
-   <updated>2019-03-15T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2019/03/15/awscurl</id>
+   <link href="http://localhost:4000/2019/03/15/awscurl/"/>
+   <updated>2019-03-15T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2019/03/15/awscurl</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-awscurl&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This command line tool can be used to sign &lt;a href=&quot;https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html&quot;&gt;AWS Signature Version 4&lt;/a&gt; requests and make calls to various AWS APIs.&lt;/p&gt;
@@ -828,9 +925,9 @@ Options:
  
  <entry>
    <title>JSON Encoder/Decoder in pure PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2018/05/11/json-v3/"/>
-   <updated>2018-05-11T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2018/05/11/json-v3</id>
+   <link href="http://localhost:4000/2018/05/11/json-v3/"/>
+   <updated>2018-05-11T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2018/05/11/json-v3</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -1060,9 +1157,9 @@ In other words, our tokenized &lt;code class=&quot;language-plaintext highlighte
  
  <entry>
    <title>SemVer for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2017/02/27/semver/"/>
-   <updated>2017-02-27T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2017/02/27/semver</id>
+   <link href="http://localhost:4000/2017/02/27/semver/"/>
+   <updated>2017-02-27T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2017/02/27/semver</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-semver&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can validate and compare &lt;strong&gt;Major.Minor.Patch&lt;/strong&gt; versions (ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;1.0.0&quot;&lt;/code&gt;).
@@ -1189,9 +1286,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>Unit Testing framework for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2015/03/18/unit/"/>
-   <updated>2015-03-18T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2015/03/18/unit</id>
+   <link href="http://localhost:4000/2015/03/18/unit/"/>
+   <updated>2015-03-18T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2015/03/18/unit</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-unit&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used for Unit Testing your &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt; code.&lt;/p&gt;
@@ -1398,9 +1495,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>bcrypt hashing for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2015/03/17/bcrypt/"/>
-   <updated>2015-03-17T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2015/03/17/bcrypt</id>
+   <link href="http://localhost:4000/2015/03/17/bcrypt/"/>
+   <updated>2015-03-17T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2015/03/17/bcrypt</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-bcrypt&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to hash strings (ex: passwords) using bcrypt in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -1512,9 +1609,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>HTTP(S) client for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2015/03/16/https/"/>
-   <updated>2015-03-16T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2015/03/16/https</id>
+   <link href="http://localhost:4000/2015/03/16/https/"/>
+   <updated>2015-03-16T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2015/03/16/https</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-https&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to make HTTP and HTTPS requests in &lt;a href=&quot;http://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt;, with support for authentication.&lt;/p&gt;
@@ -1934,9 +2031,9 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
  
  <entry>
    <title>JSON Encoder/Decoder for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2015/03/08/json/"/>
-   <updated>2015-03-08T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2015/03/08/json</id>
+   <link href="http://localhost:4000/2015/03/08/json/"/>
+   <updated>2015-03-08T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2015/03/08/json</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -2192,9 +2289,9 @@ enum json_value_type {
  
  <entry>
    <title>Nanomsg FFI Bindings for PicoLisp</title>
-   <link href="https://picolisp.a1w.ca/2015/02/22/nanomsg/"/>
-   <updated>2015-02-22T00:00:00+00:00</updated>
-   <id>https://picolisp.a1w.ca/2015/02/22/nanomsg</id>
+   <link href="http://localhost:4000/2015/02/22/nanomsg/"/>
+   <updated>2015-02-22T00:00:00+09:00</updated>
+   <id>http://localhost:4000/2015/02/22/nanomsg</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-nanomsg&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h1 id=&quot;picolisp-nanomsg-explanation&quot;&gt;PicoLisp-Nanomsg Explanation&lt;/h1&gt;

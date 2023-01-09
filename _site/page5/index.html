@@ -35,7 +35,7 @@
   <div class="container sidebar-sticky">
     <div class="sidebar-about">
       <h1>
-        <a href="https://picolisp.a1w.ca">
+        <a href="http://localhost:4000">
           PicoLisp Libraries
         </a>
       </h1>
@@ -45,55 +45,59 @@
     <nav class="sidebar-nav">
       <ul>
       
-        <li><a href="https://picolisp.a1w.ca/2020/10/29/rust/">
+        <li><a href="http://localhost:4000/2023/01/09/zig/">
+          zig
+        </a></li>
+      
+        <li><a href="http://localhost:4000/2020/10/29/rust/">
           rust
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2020/09/16/posixmq/">
+        <li><a href="http://localhost:4000/2020/09/16/posixmq/">
           posixmq
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2020/06/18/supervisor/">
+        <li><a href="http://localhost:4000/2020/06/18/supervisor/">
           supervisor
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2020/06/16/keyvalue/">
+        <li><a href="http://localhost:4000/2020/06/16/keyvalue/">
           keyvalue
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2020/01/02/action/">
+        <li><a href="http://localhost:4000/2020/01/02/action/">
           action
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2019/03/15/awscurl/">
+        <li><a href="http://localhost:4000/2019/03/15/awscurl/">
           awscurl
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2018/05/11/json-v3/">
+        <li><a href="http://localhost:4000/2018/05/11/json-v3/">
           json-v3
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2017/02/27/semver/">
+        <li><a href="http://localhost:4000/2017/02/27/semver/">
           semver
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2015/03/18/unit/">
+        <li><a href="http://localhost:4000/2015/03/18/unit/">
           unit
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2015/03/17/bcrypt/">
+        <li><a href="http://localhost:4000/2015/03/17/bcrypt/">
           bcrypt
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2015/03/16/https/">
+        <li><a href="http://localhost:4000/2015/03/16/https/">
           https
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2015/03/08/json/">
+        <li><a href="http://localhost:4000/2015/03/08/json/">
           json
         </a></li>
       
-        <li><a href="https://picolisp.a1w.ca/2015/02/22/nanomsg/">
+        <li><a href="http://localhost:4000/2015/02/22/nanomsg/">
           nanomsg
         </a></li>
       
@@ -110,68 +114,345 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2020/01/02/action/">
-        GitHub Action to run 32-bit or 64-bit PicoLisp code
+      <a href="http://localhost:4000/2020/06/16/keyvalue/">
+        Redis-inspired key/value store written in PicoLisp
       </a>
     </h1>
 
-    <span class="post-date">02 Jan 2020</span>
+    <span class="post-date">16 Jun 2020</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-action">get it on GitHub</a> or the <a href="https://github.com/marketplace/actions/picolisp-action">GitHub Marketplace</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-kv">get it on GitHub</a>.</p>
 
-<p>This action downloads, compiles, and globally installs PicoLisp.
-It can be used to run PicoLisp code such as <a href="https://github.com/aw/picolisp-unit">units tests</a>.</p>
+<p>This program mimics functionality of a <a href="https://redis.io">Redis™</a> in-memory database, but is designed specifically for <a href="https://picolisp.com">PicoLisp</a> applications with optional on-disk persistence and encryption.</p>
 
-<p><img src="https://user-images.githubusercontent.com/153401/70022112-e4695580-158a-11ea-886d-0db01dbe7a66.png" alt="Example PicoLisp tests" /></p>
+<blockquote>
+  <p><strong>Note:</strong> This library <strong>DOES NOT</strong> use the <a href="https://redis.io/topics/protocol">RESP protocol</a> and thus cannot work with the <code class="language-plaintext highlighter-rouge">redis-cli</code> or other <em>Redis</em> clients/servers.</p>
+</blockquote>
 
-<h2 id="inputs">Inputs</h2>
+<p>The included <code class="language-plaintext highlighter-rouge">server.l</code> and <code class="language-plaintext highlighter-rouge">client.l</code> can be used to send and receive <em>“Redis-like”</em> commands over TCP or UNIX named pipess.</p>
 
-<h3 id="version"><code class="language-plaintext highlighter-rouge">version</code></h3>
+<p><img src="https://user-images.githubusercontent.com/153401/84755112-ca381780-afb0-11ea-8d13-31d1a2152d2a.png" alt="GET/SET" /></p>
 
-<p><strong>Optional</strong> The version of PicoLisp. Default ‘20.6’. Accepts <code class="language-plaintext highlighter-rouge">19.12</code>, <code class="language-plaintext highlighter-rouge">19.6</code>, <code class="language-plaintext highlighter-rouge">18.12</code>, <code class="language-plaintext highlighter-rouge">18.6</code>, <code class="language-plaintext highlighter-rouge">17.12</code>, <code class="language-plaintext highlighter-rouge">latest</code>, <code class="language-plaintext highlighter-rouge">pil21</code></p>
+<ol>
+  <li><a href="#requirements">Requirements</a></li>
+  <li><a href="#getting-started">Getting Started</a></li>
+  <li><a href="#usage">Usage</a></li>
+  <li><a href="#notes-and-limitations">Note and Limitations</a></li>
+  <li><a href="#how-it-works">How it works</a></li>
+  <li><a href="#persistence">Persistence</a></li>
+</ol>
 
-<h3 id="architecture"><code class="language-plaintext highlighter-rouge">architecture</code></h3>
-
-<p><strong>Optional</strong> The architecture of PicoLisp (32 or 64-bit). Default <code class="language-plaintext highlighter-rouge">src64</code>. Accepts <code class="language-plaintext highlighter-rouge">src</code>, <code class="language-plaintext highlighter-rouge">src64</code></p>
-
-<h2 id="example-usage">Example usage</h2>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- uses: aw/picolisp-action@v2
-  with:
-    version: 18.12
-    architecture: src64
-
-- name: Print Hello World with the full PicoLisp version number
-  run: pil -'prin "Hello World: "' -version -bye
-</code></pre></div></div>
-
-<h2 id="example-workflow">Example workflow</h2>
-
-<p>See the <a href="https://github.com/aw/picolisp-json/blob/master/.github/workflows/main.yml">picolisp-json workflow</a> for a more detailed usage example.</p>
-
-<h2 id="code">Code</h2>
-
-<p>This action is written in CoffeeScript, see <a href="index.coffee">index.coffee</a></p>
-
-<h2 id="notes">Notes</h2>
+<h1 id="requirements">Requirements</h1>
 
 <ul>
-  <li>Unknown values will be replaced with the default value (ex: version: 1.2.3, will become version: 19.12)</li>
-  <li>The PicoLisp environment is extracted to <code class="language-plaintext highlighter-rouge">/tmp/picoLisp</code></li>
-  <li>32-bit PicoLisp is always compiled</li>
-  <li>64-bit PicoLisp is bootstrapped from the 32-bit PicoLisp</li>
-  <li>64-bit PicoLisp will not be compiled if the <code class="language-plaintext highlighter-rouge">architecture</code> value is <code class="language-plaintext highlighter-rouge">src</code></li>
-  <li><code class="language-plaintext highlighter-rouge">pil21</code> technically only works on 64-bit architectures</li>
+  <li>PicoLisp 32-bit/64-bit <code class="language-plaintext highlighter-rouge">v17.12</code> to <code class="language-plaintext highlighter-rouge">v20.6.29</code>, or <code class="language-plaintext highlighter-rouge">pil21</code></li>
+  <li>Linux or UNIX-like OS (with support for named pipes)</li>
 </ul>
 
-<h2 id="build">Build</h2>
+<h1 id="getting-started">Getting Started</h1>
 
-<p>To build this action:</p>
+<p>This library is written in pure PicoLisp and contains <strong>no external dependencies</strong>.</p>
+
+<p>To ensure everything works on your system, run the tests first: <code class="language-plaintext highlighter-rouge">make check</code></p>
+
+<h3 id="using-the-cli-tools">Using the CLI tools</h3>
+
+<ol>
+  <li>Launch a server with: <code class="language-plaintext highlighter-rouge">./server.l --pass &lt;yourpass&gt; --verbose</code></li>
+  <li>Check the server info with: <code class="language-plaintext highlighter-rouge">./client.l --pass &lt;yourpass&gt; INFO</code></li>
+</ol>
+
+<p>That should return some interesting info about your server. See below for more examples.</p>
+
+<h3 id="using-as-a-library">Using as a library</h3>
+
+<p><strong>Server</strong></p>
+
+<ol>
+  <li>Load the library in your project: <code class="language-plaintext highlighter-rouge">(load "libkv.l")</code></li>
+  <li>Set the server password: <code class="language-plaintext highlighter-rouge">(setq *KV_pass "yourpass")</code></li>
+  <li>Start listening for requests: <code class="language-plaintext highlighter-rouge">(kv-listen)</code></li>
+</ol>
+
+<p><strong>Client</strong></p>
+
+<ol>
+  <li>Load the client library in your project: <code class="language-plaintext highlighter-rouge">(load "libkvclient.l")</code></li>
+  <li>Set the server password <code class="language-plaintext highlighter-rouge">(setq *KV_pass "yourpass")</code></li>
+  <li>Start the client listener with <code class="language-plaintext highlighter-rouge">(kv-start-client)</code></li>
+  <li>Send your command and arguments with <code class="language-plaintext highlighter-rouge">(kv-send-data '("INFO" "server"))</code></li>
+</ol>
+
+<p>Received data will be returned as-is (list, integer, string, etc). Wrap the result like: <code class="language-plaintext highlighter-rouge">(kv-print Result)</code> to send the output to <code class="language-plaintext highlighter-rouge">STDOUT</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>: (load "libkvclient.l")
+-&gt; kv-start-client
+: (setq *KV_pass "yourpass")
+-&gt; "yourpass"
+: (kv-start-client)
+-&gt; T
+: (kv-send-data '("set" "mykey" 12345))
+-&gt; "OK"
+: (kv-send-data '("get" "mykey"))
+-&gt; 12345
+: (kv-send-data '("set" "yourkey" "12345"))
+-&gt; "OK"
+: (kv-send-data '("get" "yourkey"))
+-&gt; "12345"
+</code></pre></div></div>
+
+<p>Feel free to observe the example code in <a href="https://github.com/aw/picolisp-kv/blob/master/client.l">client.l</a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Using <code class="language-plaintext highlighter-rouge">(kv-send-data)</code> will send the data to the server and automatically block the client while waiting for a response.</p>
+</blockquote>
+
+<h1 id="usage">Usage</h1>
+
+<p>This section describes usage information for the CLI tools <code class="language-plaintext highlighter-rouge">server.l</code> and <code class="language-plaintext highlighter-rouge">client.l</code>.</p>
+
+<h2 id="server">Server</h2>
+
+<p>The server listens in the foreground for TCP connections on port <code class="language-plaintext highlighter-rouge">6378</code> by default. Only the <code class="language-plaintext highlighter-rouge">password</code>, <code class="language-plaintext highlighter-rouge">port</code>, <code class="language-plaintext highlighter-rouge">persistence</code>, and <code class="language-plaintext highlighter-rouge">verbosity</code> are configurable, and a <code class="language-plaintext highlighter-rouge">password</code> is required:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># server.l
+Usage:                    ./server.l --pass &lt;pass&gt; [options]
+
+Example:                  ./server.l --pass foobared --port 6378 --verbose --persist 60
+
+Options:
+--help                    Show this help message and exit
+
+--binary                  Store data in binary format instead of text (default: plaintext)
+--pass &lt;password&gt;         Password used by clients to access the server (required)
+--persist &lt;seconds&gt;       Number of seconds between database persists to disk (default: disabled)
+--port &lt;port&gt;             TCP listen port for communication with clients (default: 6378)
+--verbose                 Verbose flag (default: False)
+</code></pre></div></div>
+
+<h3 id="examples">Examples</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./server.l --pass yourpass --verbose
+Parent PID: 38867
+[sibling]=38874
+[child]=38873 [parent]=38867
+[msg] from client: (pid: 38873) ::ffff:127.0.0.1 ("IDENT" ("id" . "3F21CC32") ("hostname" . "meta.lan"))
+[msg] from child : (pid: 38873) ("message" 38873 ("IDENT" ("id" . "3F21CC32") ("hostname" . "meta.lan")))
+[msg]   to client: "OK 3F21CC32"
+[msg] from client: (pid: 38873) ::ffff:127.0.0.1 ("INFO" "server")
+[msg] from child : (pid: 38873) ("message" 38873 ("INFO" "server"))
+[msg]   to client: "^J# Server^Japp_version:0.11.0^Jos:Linux 4.19.34-tinycore64 x86_64^Jarch_bits:64^Jprocess_id:38874^Jtcp_port:6378^Juptime_in_seconds:1^Juptime_in_days:0^Jexecutable:/usr/bin/picolisp^J"
+[child]=38873 exiting
+[msg] from child : (pid: 38873) ("done" 38873 NIL)
+</code></pre></div></div>
+
+<h2 id="client">Client</h2>
+
+<p>The client handles authentication, identification, and sending of <em>“Redis-like”</em> commands to the server. It then prints the result to <code class="language-plaintext highlighter-rouge">STDOUT</code> and can be parsed by standard <em>*NIX</em> tools. The client receives <em>PLIO</em> data over a TCP socket, or named pipe (if client/server are on the same system).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># client.l
+Usage:                    ./client.l --pass &lt;pass&gt; COMMAND [arguments]
+
+Example:                  ./client.l --pass foobared --encrypt SET mysecret -- &lt;(echo 'mypass')
+
+Options:
+--help                    Show this help message and exit
+--commands                Show the full list of commands and exit
+
+--decrypt                 Enable decryption of values using a GPG public key (default: disabled)
+--encrypt                 Enable encryption of values using a GPG public key (default: disabled)
+--name  &lt;name&gt;            Easily identifiable client name (default: randomly generated)
+--host  &lt;host&gt;            Hostname or IP of the key/value server (default: localhost)
+--pass  &lt;data&gt;            Password used to access the server (required)
+--poll  &lt;seconds&gt;         Number of seconds for polling the key/value server (default: don't poll)
+--port  &lt;port&gt;            TCP port of the key/value server (default: 6378)
+-- STDIN                  Reads an argument from STDIN
+
+COMMAND LIST              Commands are case-insensitive and don't always require arguments
+
+  APPEND key value          		Append a value to a key
+  BGSAVE                    		Asynchronously save the dataset to disk
+  CLIENT ID                 		Returns the client ID for the current connection
+  CLIENT KILL ID id [id ..]    		Kill the connection of a client
+  CLIENT LIST               		Get the list of client connections
+  CONVERT                   		Convert a plaintext database to binary or vice-versa
+  DEL key [key ..]          		Delete a key
+  EXISTS key [key ..]       		Determine if a key exists
+  GET key                   		Get the value of a key
+  GETSET key value          		Set the string value of a key and return its old value
+  HDEL key field [field ..]    		Delete one or more hash fields
+  HEXISTS key field         		Determine if a hash field exists
+  HGET key field            		Get the value of a hash field
+  HGETALL key               		Get all the fields and values in a hash
+  HKEYS key                 		Get all the fields in a hash
+  HLEN key                  		Get the number of fields in a hash
+  HMGET key field [field ..]    	Get the values of all the given hash fields
+  HSET key field value [field value ..] Set the string value of a hash field
+  HSTRLEN key field         		Get the length of the value of a hash field
+  HVALS key                 		Get all the values in a hash
+  INFO [section]            		Get information and statistics about the server
+  LINDEX key index          		Get an element from a list by its index
+  LLEN key                  		Get the length of a list
+  LPOP key                  		Remove and get the first element in a list
+  LPOPRPUSH source destination    	Remove the first element in a list, append it to another list and return it
+  LPUSH key element [element ..]    	Prepend one or multiple elements to a list
+  LRANGE key start stop     		Get a range of elements from a list
+  LREM key count element    		Remove elements from a list
+  LSET key index element    		Set the value of an element in a list by its index
+  LTRIM key start stop      		Trim a list to the specified range
+  MGET key [key ..]         		Get the values of all the given keys
+  MSET key value [key value ..]    	Set multiple keys to multiple values
+  PING [message]            		Ping the server
+  RPOP key                  		Remove and get the last element in a list
+  RPOLRPUSH source destination    	Remove the last element in a list, prepend it to another list and return it
+  RPUSH key element [element ..]    	Append one or multiple elements to a list
+  SAVE                      		Synchronously save the dataset to disk
+  SET key value             		Set the string value of a key
+  STRLEN key                		Get the length of the value stored in a key
+</code></pre></div></div>
+
+<h1 id="notes-and-limitations">Notes and limitations</h1>
+
+<p>This section will explain some important technical details about the code, and limitations on what this library can and can’t do.</p>
+
+<h2 id="technical-notes">Technical notes</h2>
 
 <ul>
-  <li>Install <code class="language-plaintext highlighter-rouge">NodeJS v12</code></li>
-  <li>Install the dev dependencies with <code class="language-plaintext highlighter-rouge">npm install</code></li>
-  <li>Generate the <code class="language-plaintext highlighter-rouge">dist/index.js</code> with <code class="language-plaintext highlighter-rouge">npm run build</code></li>
+  <li>All keys are stored under the prefix <code class="language-plaintext highlighter-rouge">*KV/</code>, example: <code class="language-plaintext highlighter-rouge">*KV/mykeys</code>. This prefix is hardcoded everywhere and shouldn’t be changed.</li>
+  <li>Requests and commands generate statistics which are stored in memory (and lost when the server exits). Statistics are stored under the <code class="language-plaintext highlighter-rouge">*KV/%stats%/</code> prefix and are <em>read-only</em> by external clients.</li>
+  <li>Similar to the <a href="https://tools.ietf.org/html/rfc6455#section-1.3">WebSockets protocol</a>, a unique UUID: <code class="language-plaintext highlighter-rouge">7672FDB2-4D29-4F10-BA7C-8EAD0E29626E</code> is used during the handshake sequence between all clients and servers. For compatibility with future tools, please do not change it.</li>
+  <li>Passwords are hashed using a very simple and collision-prone hashing function. It is not cryptographically secure or used for that purpose. If using this library over a public network, please use <a href="https://www.stunnel.org/">stunnel</a> or <a href="https://github.com/varnish/hitch">hitch</a> as a TLS proxy between the client and server.</li>
+  <li>Output from the <code class="language-plaintext highlighter-rouge">client.l</code> uses <code class="language-plaintext highlighter-rouge">(prinl)</code>, so a result <code class="language-plaintext highlighter-rouge">"2"</code> and <code class="language-plaintext highlighter-rouge">2</code> will both appear the same. Lists are concatenated with a <code class="language-plaintext highlighter-rouge">,</code> comma and also output using <code class="language-plaintext highlighter-rouge">(prinl)</code>. Error messages are sent to <code class="language-plaintext highlighter-rouge">STDERR</code> and the client exits with error code <code class="language-plaintext highlighter-rouge">1</code>.</li>
+  <li>Named pipes are created in the <code class="language-plaintext highlighter-rouge">(tmp)</code> directory of the server’s parent process, and will be removed when the parent <strong>exits cleanly</strong>. Please do not kill the parent process with <code class="language-plaintext highlighter-rouge">kill -9</code> (or <code class="language-plaintext highlighter-rouge">kill -KILL</code>) as it will leave an unresponsive zombie sibling with the TCP socket still open, and the named pipes will not be removed.</li>
+  <li>A best effort has been made to return the same datatypes and response types as <em>Redis</em>. Example: the <code class="language-plaintext highlighter-rouge">SET</code> command returns <code class="language-plaintext highlighter-rouge">OK</code> if the key was set. Not all responses are absolutely identical to <em>Redis</em> though. Please remember this library isn’t designed to be a perfect clone of <em>Redis</em> (see Limitations below).</li>
+</ul>
+
+<h2 id="limitations">Limitations</h2>
+
+<ul>
+  <li>This library is not used in production and has not been tested extensively (despite all the unit/integration tests). Please use at your own risk.</li>
+  <li>This library <strong>DOES NOT</strong> use the <a href="https://redis.io/topics/protocol">RESP protocol</a> and thus cannot work with the <code class="language-plaintext highlighter-rouge">redis-cli</code> or other <em>Redis</em> clients.</li>
+  <li>Since PicoLisp is not <em>event-based</em>, each new TCP connection spawns a new process, which limits concurrency to the host’s available resources.</li>
+  <li>Not all <a href="https://redis.io/commands">Redis commands</a> are implemented, because I didn’t have an immediate need for them. There are plans to slowly add new commands as the need arises.</li>
+  <li>Using the <code class="language-plaintext highlighter-rouge">client.l</code> on the command-line, all values are stored as strings. Please use the TCP socket or named pipe directly to store integers and lists.</li>
+  <li><del>Unlike <em>Redis</em>, there is no on-disk persistence and <strong>all keys will be lost</strong> when the server is restarted. This library was originally designed to be used as a temporary FIFO queue, with no need to persist the data. Support for persistence can be added eventually, and I’m open to pull-requests.</del> Support for persistence has been added, see <a href="#persistence">Persistence</a> below.</li>
+</ul>
+
+<h1 id="how-it-works">How it works</h1>
+
+<p>For the server, everything starts with the <code class="language-plaintext highlighter-rouge">(kv-listen)</code> function, which is where the TCP server is started:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+------------+   +---------------------+    +----------------+
+| TCP client |   | (parent)            |    | (sibling)      |
++-----+---+--+   |    +-------------+  |    | +------------+ |
+      ^   |      |    | TCP server  |  |    | | Key/Value  | |
+      |   +---------&gt; | (kv-listen) |  |    | | in-memory  | |
+      |          |    +-------------+  |    | |     DB     | |
+      |          |                     |    | +------------+ |
++-----+-------------&gt; pipe_sibling +------&gt; |                |
+|                |                     |    +-+-+-+----------+
+|  +--------+    |                     |      | | |
++--+ child1 | &lt;-----+ pipe_child_1 &lt;----------+ | |
+|  +--------+    |                     |        | |
+|                |                     |        | |
+|  +--------+    |                     |        | |
++--+ child2 | &lt;-----+ pipe_child_2 &lt;------------+ |
+|  +--------+    |                     |          |
+|                |                     |          |
+|  +--------+    |                     |          |
++--+ child3 | &lt;-----+ pipe_child_3 &lt;--------------+
+   +--------+    |                     |
+                 +---------------------+
+</code></pre></div></div>
+
+<p>Once <code class="language-plaintext highlighter-rouge">(kv-listen)</code> is running, a TCP socket is opened on the configured port. An infinite loop begins and listens for incoming connections, giving each new TCP client its own forked child process for handling the request.</p>
+
+<p>A named pipe called <code class="language-plaintext highlighter-rouge">pipe_sibling</code>, is created in a temporary directory of the top-level <strong>parent</strong> process. This pipe will be used to communicate with other <strong>child</strong> processes, leaving the parent process to continue serving new TCP requests.</p>
+
+<p>The parent process then forks another process, which we’ll call the <strong>sibling</strong> - an older sister if you prefer - and the sibling waits on the <code class="language-plaintext highlighter-rouge">pipe_sibling</code> named pipe, listening for <em>COMMANDS</em> from the child processes.</p>
+
+<p>The forked child processes will each create their own named pipe, called <code class="language-plaintext highlighter-rouge">pipe_child_&lt;pid&gt;</code>, also in a temporary directory of the top-level <strong>parent</strong> process. The child process will listen on its own named pipe for messages sent by its older sister, the <strong>sibling</strong>. Once a message is received by the child, the response is sent back to the <strong>client</strong> over the TCP connection.</p>
+
+<p>The idea is to have the <strong>sibling</strong> be the holder of all the <strong>keys</strong>. Every <em>“Redis-like”</em> command will have their data and statistics stored in the memory of the <strong>sibling</strong> process, and the <strong>sibling</strong> will handle receiving and sending its memory contents (keys/values) through named pipes to the respective <strong>child</strong> processes.</p>
+
+<h1 id="persistence">Persistence</h1>
+
+<p>Similar to <a href="https://redis.io/topics/persistence">Redis</a>, this database implements “snapshotting” (full memory dump to disk) and “AOF” (append-only log file), however both features are tightly coupled, which makes for a much better experience.</p>
+
+<ul>
+  <li>Persistence is disabled by default, but can be enabled with the <code class="language-plaintext highlighter-rouge">--persist N</code> parameter, where <code class="language-plaintext highlighter-rouge">N</code> is the number of seconds between each <code class="language-plaintext highlighter-rouge">BGSAVE</code> (background save to disk).</li>
+  <li>The database is stored in plaintext by default, but can be stored in binary with the <code class="language-plaintext highlighter-rouge">--binary</code> parameter. Binary format (PLIO) loads and saves <em>much</em> quicker than plaintext, but it becomes difficult to debug a corrupt entry.</li>
+  <li>The AOF follows the <em>WAL</em> approach, where each write command is first written to the AOF on disk, and then processed in the key/value memory store.</li>
+  <li>The AOF only stores log entries since the previous <code class="language-plaintext highlighter-rouge">SAVE</code> or <code class="language-plaintext highlighter-rouge">BGSAVE</code>, so it technically shouldn’t grow too large or unmanageable.</li>
+  <li>The database snapshot on disk is the most complete and important data, and should be backed up regularly.</li>
+  <li><em>fsync</em> is not managed by the database, so the server admin must ensure AOF log writes are actually persisted to disk.</li>
+  <li>The AOF on-disk format is <strong>always plaintext</strong>, to allow easy debugging and repair of a corrupt entry.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">SAVE</code> and <code class="language-plaintext highlighter-rouge">BGSAVE</code> commands can still be sent even if persistence is disabled. This will dump the in-memory data to disk as if persistence was enabled.</li>
+</ul>
+
+<h2 id="how-persistence-is-implemented">How persistence is implemented</h2>
+
+<p>Here we’ll assume persistence was previously enabled and data has already been written and saved to disk.</p>
+
+<ol>
+  <li>On server start, some memory is pre-allocated according to the DB’s file size.</li>
+  <li>The DB is then fully restored to memory</li>
+  <li>If the AOF contains some entries, it is fully replayed to memory</li>
+  <li>The DB is saved once more to disk and the AOF gets wiped</li>
+  <li>A timer is started to perform periodic background DB saves</li>
+  <li>Every new client connection sends the command to the AOF</li>
+  <li>When a <code class="language-plaintext highlighter-rouge">BGSAVE</code> (non-blocking) command is received, a temporay copy of the AOF is made, the current AOF is wiped, and a background process is forked to save the DB to disk</li>
+  <li>A backup of the DB file is always made before overwriting the current DB file.</li>
+  <li>To help handle concurrency and persistence, temporary files are named <code class="language-plaintext highlighter-rouge">kv.db.lock</code>, <code class="language-plaintext highlighter-rouge">kv.db.tmp</code>, <code class="language-plaintext highlighter-rouge">kv.aof.lock</code>, and <code class="language-plaintext highlighter-rouge">kv.aof.tmp</code>. It’s best not to modify or delete those files while the server is running. They can be safely removed while the server is stopped.</li>
+</ol>
+
+<h2 id="aof-format">AOF format</h2>
+
+<p>The AOF is stored by default in the <code class="language-plaintext highlighter-rouge">kv.aof</code> file as defined by <code class="language-plaintext highlighter-rouge">*KV_aof</code>.</p>
+
+<p>Here are two separate entries in a typical AOF:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>("1596099036.281142829" 54042 ("RPUSH" "mytestlist" ("four" "five" "six")))
+("1596099059.683596840" 57240 ("RPUSH" "yourtestlist" ("seven" "eight" "nine")))
+</code></pre></div></div>
+
+<p>Each line is a PicoLisp list with only 3 items:</p>
+
+<ul>
+  <li>Item 1: <code class="language-plaintext highlighter-rouge">String</code> Unix timestamp with nanoseconds for when the entry was created</li>
+  <li>Item 2: <code class="language-plaintext highlighter-rouge">Integer</code> Non-cryptographically secure hash (CRC) of the command and its arguments</li>
+  <li>Item 3: <code class="language-plaintext highlighter-rouge">List</code> Command name, first argument, and subsequent arguments</li>
+</ul>
+
+<p>When replaying the AOF, the server will ensure the hash of command and arguments match, to guarantee the data is intact. Replaying an AOF can be slow, depending on the number of keys/values.</p>
+
+<blockquote>
+  <p><strong>Note:</strong> Manually modifying the AOF will require recomputing and replacing the hash with the result from <code class="language-plaintext highlighter-rouge">(kv-hash)</code> or PicoLisp <code class="language-plaintext highlighter-rouge">(hash)</code>.</p>
+</blockquote>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(hash '("RPUSH" "mytestlist" ("four" "five" "zero")))
+-&gt; 61453
+</code></pre></div></div>
+
+<h2 id="db-format">DB format</h2>
+
+<p>The DB is stored by default in the <code class="language-plaintext highlighter-rouge">kv.db</code> file as defined by <code class="language-plaintext highlighter-rouge">*KV_db</code>. When backed up, the new filename contains the suffix <code class="language-plaintext highlighter-rouge">.old</code>.</p>
+
+<p>Here are two separate entries in a typical DB:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>("smalldata" ("test1" "test2" "test3" "test4" "test5" "test6"))
+("fooh_1000" "test data 1000")
+</code></pre></div></div>
+
+<p>Each line is a PicoLisp list with the key in the <code class="language-plaintext highlighter-rouge">(car)</code>, and values in the <code class="language-plaintext highlighter-rouge">(cadr)</code>. They are quickly replayed and stored in memory with a simple <code class="language-plaintext highlighter-rouge">(set)</code> command.</p>
+
+<h2 id="differences-from-redis">Differences from Redis</h2>
+
+<ul>
+  <li>Unlike <em>Redis</em>, persistence only allows specifying a time interval between each <code class="language-plaintext highlighter-rouge">BGSAVE</code>. Since the AOF is <strong>always enabled</strong>, it’s not necessary to “save after N changes”, so the config is much simpler.</li>
+  <li>Log rewriting is not something that “must be done”, because chances are the AOF will never grow too large. Of course that depends on the number of changes occurring between each <code class="language-plaintext highlighter-rouge">BGSAVE</code>, but even then the AOF is wiped when a <code class="language-plaintext highlighter-rouge">BGSAVE</code> is initiated (and restored/rewritten if there was an error).</li>
+  <li>The DB snapshot is used to reconstruct the dataset in memory, not the AOF. The AOF is only used to replay the commands since the last DB save, which is much faster and more efficient, particularly when using <code class="language-plaintext highlighter-rouge">--binary</code>.</li>
+  <li>There is no danger of <em>losing data</em> when switching from <code class="language-plaintext highlighter-rouge">RDB</code> to <code class="language-plaintext highlighter-rouge">AOF</code>, because such a concept doesn’t even exist.</li>
 </ul>
 
   </div>
