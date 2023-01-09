@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
  <title>PicoLisp Libraries</title>
- <link href="http://localhost:4000/atom.xml" rel="self"/>
- <link href="http://localhost:4000/"/>
- <updated>2023-01-09T10:12:10+09:00</updated>
- <id>http://localhost:4000</id>
+ <link href="https://picolisp.a1w.ca/atom.xml" rel="self"/>
+ <link href="https://picolisp.a1w.ca/"/>
+ <updated>2023-01-09T10:14:33+09:00</updated>
+ <id>https://picolisp.a1w.ca</id>
  <author>
    <name>Alexander Williams</name>
    <email></email>
@@ -14,9 +14,9 @@
  
  <entry>
    <title>PicoLisp FFI with Zig</title>
-   <link href="http://localhost:4000/2023/01/09/zig/"/>
+   <link href="https://picolisp.a1w.ca/2023/01/09/zig/"/>
    <updated>2023-01-09T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2023/01/09/zig</id>
+   <id>https://picolisp.a1w.ca/2023/01/09/zig</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-zig&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://ziglang.org/download/&quot;&gt;Zig&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
@@ -111,9 +111,9 @@ Extracted struct:
  
  <entry>
    <title>PicoLisp FFI with Rust</title>
-   <link href="http://localhost:4000/2020/10/29/rust/"/>
+   <link href="https://picolisp.a1w.ca/2020/10/29/rust/"/>
    <updated>2020-10-29T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2020/10/29/rust</id>
+   <id>https://picolisp.a1w.ca/2020/10/29/rust</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-rust&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://www.rust-lang.org/tools/install&quot;&gt;Rust&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
@@ -229,9 +229,9 @@ Extracted struct:
  
  <entry>
    <title>POSIX Message Queues library for PicoLisp</title>
-   <link href="http://localhost:4000/2020/09/16/posixmq/"/>
+   <link href="https://picolisp.a1w.ca/2020/09/16/posixmq/"/>
    <updated>2020-09-16T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2020/09/16/posixmq</id>
+   <id>https://picolisp.a1w.ca/2020/09/16/posixmq</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-posixmq&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;em&gt;&lt;a href=&quot;https://man7.org/linux/man-pages/man7/mq_overview.7.html&quot;&gt;POSIX Message Queues&lt;/a&gt;&lt;/em&gt; provide a dependency-free mechanism for processes to exchange data in the form of messages.&lt;/p&gt;
@@ -304,9 +304,9 @@ Extracted struct:
  
  <entry>
    <title>Unicorn-inspired PicoLisp daemon to spawn and manage worker processes</title>
-   <link href="http://localhost:4000/2020/06/18/supervisor/"/>
+   <link href="https://picolisp.a1w.ca/2020/06/18/supervisor/"/>
    <updated>2020-06-18T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2020/06/18/supervisor</id>
+   <id>https://picolisp.a1w.ca/2020/06/18/supervisor</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-supervisor&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of &lt;a href=&quot;https://yhbt.net/unicorn/&quot;&gt;Unicorn&lt;/a&gt;, without being limited to HTTP applications.&lt;/p&gt;
@@ -419,9 +419,9 @@ Options:
  
  <entry>
    <title>Redis-inspired key/value store written in PicoLisp</title>
-   <link href="http://localhost:4000/2020/06/16/keyvalue/"/>
+   <link href="https://picolisp.a1w.ca/2020/06/16/keyvalue/"/>
    <updated>2020-06-16T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2020/06/16/keyvalue</id>
+   <id>https://picolisp.a1w.ca/2020/06/16/keyvalue</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-kv&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This program mimics functionality of a &lt;a href=&quot;https://redis.io&quot;&gt;Redis™&lt;/a&gt; in-memory database, but is designed specifically for &lt;a href=&quot;https://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt; applications with optional on-disk persistence and encryption.&lt;/p&gt;
@@ -760,9 +760,9 @@ COMMAND LIST              Commands are case-insensitive and don't always require
  
  <entry>
    <title>GitHub Action to run 32-bit or 64-bit PicoLisp code</title>
-   <link href="http://localhost:4000/2020/01/02/action/"/>
+   <link href="https://picolisp.a1w.ca/2020/01/02/action/"/>
    <updated>2020-01-02T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2020/01/02/action</id>
+   <id>https://picolisp.a1w.ca/2020/01/02/action</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-action&quot;&gt;get it on GitHub&lt;/a&gt; or the &lt;a href=&quot;https://github.com/marketplace/actions/picolisp-action&quot;&gt;GitHub Marketplace&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This action downloads, compiles, and globally installs PicoLisp.
@@ -824,9 +824,9 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
  
  <entry>
    <title>PicoLisp AWS CLI tool using OpenSSL and Curl</title>
-   <link href="http://localhost:4000/2019/03/15/awscurl/"/>
+   <link href="https://picolisp.a1w.ca/2019/03/15/awscurl/"/>
    <updated>2019-03-15T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2019/03/15/awscurl</id>
+   <id>https://picolisp.a1w.ca/2019/03/15/awscurl</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-awscurl&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This command line tool can be used to sign &lt;a href=&quot;https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html&quot;&gt;AWS Signature Version 4&lt;/a&gt; requests and make calls to various AWS APIs.&lt;/p&gt;
@@ -925,9 +925,9 @@ Options:
  
  <entry>
    <title>JSON Encoder/Decoder in pure PicoLisp</title>
-   <link href="http://localhost:4000/2018/05/11/json-v3/"/>
+   <link href="https://picolisp.a1w.ca/2018/05/11/json-v3/"/>
    <updated>2018-05-11T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2018/05/11/json-v3</id>
+   <id>https://picolisp.a1w.ca/2018/05/11/json-v3</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -1157,9 +1157,9 @@ In other words, our tokenized &lt;code class=&quot;language-plaintext highlighte
  
  <entry>
    <title>SemVer for PicoLisp</title>
-   <link href="http://localhost:4000/2017/02/27/semver/"/>
+   <link href="https://picolisp.a1w.ca/2017/02/27/semver/"/>
    <updated>2017-02-27T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2017/02/27/semver</id>
+   <id>https://picolisp.a1w.ca/2017/02/27/semver</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-semver&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can validate and compare &lt;strong&gt;Major.Minor.Patch&lt;/strong&gt; versions (ex: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;1.0.0&quot;&lt;/code&gt;).
@@ -1286,9 +1286,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>Unit Testing framework for PicoLisp</title>
-   <link href="http://localhost:4000/2015/03/18/unit/"/>
+   <link href="https://picolisp.a1w.ca/2015/03/18/unit/"/>
    <updated>2015-03-18T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2015/03/18/unit</id>
+   <id>https://picolisp.a1w.ca/2015/03/18/unit</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-unit&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used for Unit Testing your &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt; code.&lt;/p&gt;
@@ -1495,9 +1495,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>bcrypt hashing for PicoLisp</title>
-   <link href="http://localhost:4000/2015/03/17/bcrypt/"/>
+   <link href="https://picolisp.a1w.ca/2015/03/17/bcrypt/"/>
    <updated>2015-03-17T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2015/03/17/bcrypt</id>
+   <id>https://picolisp.a1w.ca/2015/03/17/bcrypt</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-bcrypt&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to hash strings (ex: passwords) using bcrypt in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -1609,9 +1609,9 @@ if left &amp;gt; right then return  T # left is newer
  
  <entry>
    <title>HTTP(S) client for PicoLisp</title>
-   <link href="http://localhost:4000/2015/03/16/https/"/>
+   <link href="https://picolisp.a1w.ca/2015/03/16/https/"/>
    <updated>2015-03-16T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2015/03/16/https</id>
+   <id>https://picolisp.a1w.ca/2015/03/16/https</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-https&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to make HTTP and HTTPS requests in &lt;a href=&quot;http://picolisp.com&quot;&gt;PicoLisp&lt;/a&gt;, with support for authentication.&lt;/p&gt;
@@ -2031,9 +2031,9 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
  
  <entry>
    <title>JSON Encoder/Decoder for PicoLisp</title>
-   <link href="http://localhost:4000/2015/03/08/json/"/>
+   <link href="https://picolisp.a1w.ca/2015/03/08/json/"/>
    <updated>2015-03-08T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2015/03/08/json</id>
+   <id>https://picolisp.a1w.ca/2015/03/08/json</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-json&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;This library can be used to parse and serialize (encode/decode) JSON strings in &lt;a href=&quot;http://picolisp.com/&quot;&gt;PicoLisp&lt;/a&gt;.&lt;/p&gt;
@@ -2289,9 +2289,9 @@ enum json_value_type {
  
  <entry>
    <title>Nanomsg FFI Bindings for PicoLisp</title>
-   <link href="http://localhost:4000/2015/02/22/nanomsg/"/>
+   <link href="https://picolisp.a1w.ca/2015/02/22/nanomsg/"/>
    <updated>2015-02-22T00:00:00+09:00</updated>
-   <id>http://localhost:4000/2015/02/22/nanomsg</id>
+   <id>https://picolisp.a1w.ca/2015/02/22/nanomsg</id>
    <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-nanomsg&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h1 id=&quot;picolisp-nanomsg-explanation&quot;&gt;PicoLisp-Nanomsg Explanation&lt;/h1&gt;
