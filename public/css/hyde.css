@@ -262,3 +262,4 @@ a.sidebar-nav-item:focus {
 .theme-base-aw .related-posts li a:hover {
   color: #208EBC;
 }
+.sidebar { height: 100%; overflow-y: auto; }
