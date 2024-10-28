@@ -32,7 +32,7 @@
   <body class="theme-base-aw">
 
     <div class="sidebar">
-  <div class="container sidebar-sticky">
+  <div class="container">
     <div class="sidebar-about">
       <h1>
         <a href="https://picolisp.a1w.ca">
@@ -44,6 +44,10 @@
 
     <nav class="sidebar-nav">
       <ul>
+      
+        <li><a href="https://picolisp.a1w.ca/2024/10/26/crystal/">
+          crystal
+        </a></li>
       
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
@@ -114,321 +118,263 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2015/02/22/nanomsg/">
-        Nanomsg FFI Bindings for PicoLisp
+      <a href="https://picolisp.a1w.ca/2015/03/08/json/">
+        JSON Encoder/Decoder for PicoLisp
       </a>
     </h1>
 
-    <span class="post-date">22 Feb 2015</span>
+    <span class="post-date">08 Mar 2015</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-nanomsg">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-json">get it on GitHub</a>.</p>
 
-<h1 id="picolisp-nanomsg-explanation">PicoLisp-Nanomsg Explanation</h1>
+<p>This library can be used to parse and serialize (encode/decode) JSON strings in <a href="http://picolisp.com/">PicoLisp</a>.</p>
 
-<p>This document is an attempt to explain some of the source code for the <code class="language-plaintext highlighter-rouge">PicoLisp-Nanomsg</code> FFI bindings.</p>
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6571543/56e31e44-c701-11e4-99f0-c2c51fd8061b.png" alt="picolisp-json" /></p>
 
-<p>It is not aimed at lisp experts, but rather newbies (like me), searching for tips and ideas on how to do lispy things using a <a href="http://software-lab.de/doc/native.html">Native C Library in PicoLisp</a>.</p>
+<h1 id="explanation-json-encoderdecoder-for-picolisp">Explanation: JSON Encoder/Decoder for PicoLisp</h1>
 
-<p>You can consider it more like a tutorial or walkthrough, which I’ll try my best to keep updated along with the code.</p>
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-json.git">PicoLisp-JSON</a> encoder/decoder.</p>
 
-<h1 id="getting-started">Getting started</h1>
-
-<p>If you haven’t already, then you should check out the <a href="README.md">README</a> to get an idea of what this library does.</p>
-
-<h1 id="explaining-nanomsgl">Explaining nanomsg.l</h1>
-
-<p>The <code class="language-plaintext highlighter-rouge">nanomsg.l</code> file is split into 3 major sections:</p>
+<p>It’s split into a few sections for easier reading:</p>
 
 <ol>
-  <li><code class="language-plaintext highlighter-rouge">ffi-bindings</code>: These are 1-1 function mappings with the Nanomsg C library.</li>
-  <li><code class="language-plaintext highlighter-rouge">internal</code>: Functions which you should not need to use unless implementing a new 1-1 mapping or public function.</li>
-  <li><code class="language-plaintext highlighter-rouge">public</code>: Functions which can be called by your application, mostly wrappers around <code class="language-plaintext highlighter-rouge">internal</code> and <code class="language-plaintext highlighter-rouge">ffi-bindings</code>.</li>
+  <li><a href="#global-variables">Global variables</a>: Important variables used throughout the library.</li>
+  <li><a href="#native-calls-ffi-bindings">Native calls (ffi-bindings)</a>: The <code class="language-plaintext highlighter-rouge">Parson</code> native C library, and how it’s used.</li>
+  <li><a href="#internal-functions">Internal functions</a>: Recursion and datatype-checking.
+    <ul>
+      <li><a href="#decoding-json">decoding JSON</a></li>
+      <li><a href="#encoding-json">encoding JSON</a></li>
+    </ul>
+  </li>
 </ol>
 
-<h2 id="start-of-the-file">Start of the file</h2>
+<p>Make sure you read the <a href="README.md">README</a> to get an idea of what this library does.</p>
 
-<p>At the top of the file, we define a PicoLisp namespace, and some global variables:</p>
+<p>Also, I recommend you read my <a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a> for additional PicoLisp tips and ideas.</p>
 
-<h3 id="namespaces">Namespaces</h3>
+<h1 id="global-variables">Global variables</h1>
 
-<p>PicoLisp allows you to define namespaces for your functions, using <a href="http://software-lab.de/doc/refS.html#symbols">symbols</a>. It’s similar to the concept of <em>Modules</em> in Ruby.</p>
+<p>PicoLisp does not prevent variables from leaking into the global namespace. In order to prevent that, you must use <a href="http://software-lab.de/doc/refL.html#local">local</a> and define exactly what should <em>not</em> affect the global namespace. This is important to avoid un-intended side-effects.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">symbols</span> <span class="ss">'nanomsg</span> <span class="ss">'pico</span><span class="p">)</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">local</span> <span class="nv">MODULE_INFO</span> <span class="nv">*Json</span> <span class="nv">*JSONError</span> <span class="nv">*JSONNull</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>Here, we create a namespace called <code class="language-plaintext highlighter-rouge">nanomsg</code> which is a copy of the <code class="language-plaintext highlighter-rouge">pico</code> (default) namespace.</p>
+<p>This will ensure the variables will not affect anything outside their current scope (namespace). It’s similar to <code class="language-plaintext highlighter-rouge">var Myvar;</code> in JavaScript.</p>
 
-<p>Outside of this library, you can call functions by prefixing the tilde (<code class="language-plaintext highlighter-rouge">~</code>):</p>
+<p>A few global variables have been defined at the top of the file.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">nanomsg~nn-errno</span><span class="p">)</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span>
+  <span class="nv">*Json</span>         <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"lib/libparson.so"</span><span class="p">)</span>
+  <span class="nv">*JSONError</span>    <span class="mi">-1</span>
+  <span class="nv">*JSONNull</span>     <span class="mi">1</span>
+  <span class="nv">*JSONString</span>   <span class="mi">2</span>
+  <span class="nv">*JSONNumber</span>   <span class="mi">3</span>
+  <span class="nv">*JSONObject</span>   <span class="mi">4</span>
+  <span class="nv">*JSONArray</span>    <span class="mi">5</span>
+  <span class="nv">*JSONBoolean</span>  <span class="mi">6</span>
+  <span class="nv">*JSONSuccess</span>  <span class="mi">0</span>
+  <span class="nv">*JSONFailure</span>  <span class="mi">-1</span> <span class="p">)</span>
 </code></pre></div></div>
 
-<p>Or you can switch namespace by declaring it first:</p>
+<p>You’ll notice I’m following the <a href="http://software-lab.de/doc/ref.html#conv">PicoLisp Naming Conventions</a> this time.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">symbols</span> <span class="ss">'nanomsg</span><span class="p">)</span>
+<p>The variables prefixed with <code class="language-plaintext highlighter-rouge">*JSON</code> were copied directly from <a href="https://github.com/kgabis/parson/blob/81c2fd0186cafb43c6b4c190b50bb3a4fef1827e/parson.h#L39-L54">Parson’s source code</a>:</p>
 
-<span class="p">(</span><span class="nv">nn-errno</span><span class="p">)</span>
-</code></pre></div></div>
-
-<p>Easy.</p>
-
-<h3 id="global-variables">Global variables</h3>
-
-<p>The PicoLisp naming conventions expect you to declare global variables prefixed by an asterisk (<code class="language-plaintext highlighter-rouge">*</code>) and a capital letter. For constants, I think it’s safe to use <code class="language-plaintext highlighter-rouge">ALL_CAPS</code>.</p>
-
-<p>Let’s start with the first <a href="http://software-lab.de/doc/refS.html#setq">setq</a>.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span> <span class="nv">MSG_MAX_SIZE</span> <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nv">sys</span> <span class="s">"NANOMSG_MAX_SIZE"</span><span class="p">)</span> <span class="p">(</span><span class="nb">format</span> <span class="nv">@</span><span class="p">)</span> <span class="mi">8192</span><span class="p">))</span>
-</code></pre></div></div>
-
-<p>This uses the <a href="http://software-lab.de/doc/refS.html#sys">sys</a> function to read an environment variable. If it exists, it uses <a href="http://software-lab.de/doc/refS.html#format">format</a> to convert it to a Number (environment variables will always be read as Strings). If it doesn’t exist, then it assigns the Number <code class="language-plaintext highlighter-rouge">8192</code> as the value to MSG_MAX_SIZE.</p>
-
-<blockquote>
-  <p><strong>Note:</strong> I explicitly choose <code class="language-plaintext highlighter-rouge">setq</code> to allow you to change that value anytime you want, without setting off any warnings. Be careful when doing that though.</p>
-</blockquote>
-
-<p>Next:</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span> <span class="nv">*Nanomsg</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"lib/libnanomsg.so"</span><span class="p">))</span>
-</code></pre></div></div>
-
-<p>Here we assign the name of the native C (shared) library (<code class="language-plaintext highlighter-rouge">libnanomsg.so</code>) to a global variable <code class="language-plaintext highlighter-rouge">*Nanomsg</code>. It makes code a bit cleaner, particularly when dealing with native C libraries.</p>
-
-<h2 id="1-ffi-bindings">1. ffi-bindings</h2>
-
-<p>If you plan to write an <a href="https://en.wikipedia.org/wiki/Foreign_function_interface">ffi-binding</a>, it’s a good idea to use the same function names as the C library.</p>
-
-<p>I’ll only go into detail of <code class="language-plaintext highlighter-rouge">nn-getsockopt</code>, since it seems to cover most aspects about native C calls.</p>
-
-<h3 id="nn-getsockopt">nn-getsockopt</h3>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">nn-getsockopt</span> <span class="p">(</span><span class="nv">Sock</span> <span class="nv">Level</span> <span class="nv">Option</span> <span class="nv">&amp;buf</span> <span class="nv">Length</span><span class="p">)</span>
-  <span class="p">(</span><span class="nv">use</span> <span class="nv">Buf</span>
-    <span class="p">(</span><span class="nb">cons</span>
-      <span class="p">(</span><span class="nv">native</span> <span class="o">`</span><span class="nv">*Nanomsg</span> <span class="s">"nn_getsockopt"</span> <span class="ss">'I</span>
-                                        <span class="nv">Sock</span>
-                                        <span class="p">(</span><span class="nv">symbol-val</span> <span class="nv">Level</span><span class="p">)</span>
-                                        <span class="p">(</span><span class="nv">symbol-val</span> <span class="nv">Option</span><span class="p">)</span>
-                                        <span class="p">(</span><span class="nb">cons</span> <span class="ss">'Buf</span> <span class="nv">&amp;buf</span> <span class="mi">0</span><span class="p">)</span>
-                                        <span class="nv">Length</span> <span class="p">)</span>
-      <span class="nv">Buf</span> <span class="nv">]</span>
-</code></pre></div></div>
-
-<p>You’ll quickly notice one of the arguments is named <code class="language-plaintext highlighter-rouge">&amp;buf</code>. In fact this should be <code class="language-plaintext highlighter-rouge">*buf</code> to indicate a C pointer, but I didn’t want to induce confusion with global variables. The idea was to make it clear the value would receive a <a href="http://software-lab.de/doc/refS.html#struct">structure</a> (I’ll explain this later).</p>
-
-<p>The second line: <code class="language-plaintext highlighter-rouge">(use Buf</code> is something really lovely. The <a href="http://software-lab.de/doc/refU.html#use">use</a> function allows you to <em>contain</em> a variable which could become global otherwise. In the <code class="language-plaintext highlighter-rouge">nn-getsockopt</code> function, the Buf variable would have been global if it weren’t for <code class="language-plaintext highlighter-rouge">(use</code>.</p>
-
-<p>The first <a href="http://software-lab.de/doc/refC.html#cons">cons</a> is there because we want to return the result of the <code class="language-plaintext highlighter-rouge">native</code> call as the <code class="language-plaintext highlighter-rouge">car</code>, and the <code class="language-plaintext highlighter-rouge">Buf</code> in the <code class="language-plaintext highlighter-rouge">cdr</code>.</p>
-
-<h4 id="square-brackets">Square brackets</h4>
-
-<p>The attentive would notice I used <code class="language-plaintext highlighter-rouge">]</code> in places as opposed to parens <code class="language-plaintext highlighter-rouge">)</code>. This is known as a <a href="http://software-lab.de/doc/ref.html#macro-io">super parens</a> (the name is awesome!). It essentially closes all your parens with just one square bracket.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">my-func</span> <span class="p">(</span><span class="nv">Arg1</span><span class="p">)</span> <span class="p">(</span><span class="nb">cons</span> <span class="p">(</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="mi">4</span> <span class="mi">5</span> <span class="nv">6]</span> <span class="err">#</span> <span class="nv">I</span> <span class="nv">think</span> <span class="nv">this</span> <span class="nv">is</span> <span class="nv">ugly,</span> <span class="nv">but</span> <span class="nv">useful</span>
-</code></pre></div></div>
-
-<p>My personal convention is to use a super parens at the end of a multi-line expression.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">my-func</span> <span class="p">(</span><span class="nv">Arg1</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let</span> <span class="nv">Buf</span> <span class="p">(</span><span class="nb">cons</span> <span class="p">(</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span>
-                 <span class="p">(</span><span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span><span class="p">)</span> <span class="nv">]</span> <span class="err">#</span> <span class="nv">better</span>
-</code></pre></div></div>
-
-<p>Sometimes it’s nice to use square brackets to clearly define the start and end of something.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">my-func</span> <span class="p">(</span><span class="nv">Arg1</span> <span class="nv">Arg2</span><span class="p">)</span>
-  <span class="nv">[let</span>  <span class="nv">Buf</span> <span class="p">(</span><span class="nb">cons</span> <span class="p">(</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">3</span><span class="p">)</span>
-                  <span class="p">(</span><span class="mi">4</span> <span class="mi">5</span> <span class="mi">6</span><span class="p">)</span>
-        <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">something</span><span class="p">)</span> <span class="p">(</span><span class="nv">do-something-else</span><span class="p">))</span> <span class="nv">]</span>
-  <span class="p">(</span><span class="nv">cleanup-everything</span><span class="p">)</span> <span class="p">)</span>
-</code></pre></div></div>
-
-<p>Perhaps it’s just a matter of personal taste.</p>
-
-<h4 id="the-native-call">The native call</h4>
-
-<p><a href="http://software-lab.de/doc/refN.html#native">Native</a> calls can be quite confusing at first.</p>
-
-<p>This call is identical to: <code class="language-plaintext highlighter-rouge">(native "lib/libnanomsg.so" "nn_getsockopt" ...</code>.</p>
-
-<p>The 3rd argument to <code class="language-plaintext highlighter-rouge">native</code> is the type of result the C function returns. We expect the result to be an Integer (<code class="language-plaintext highlighter-rouge">I</code>). If your C function returns a pointer, set it to <code class="language-plaintext highlighter-rouge">N</code>. When the result is a pointer, the value can be extracted using <a href="http://software-lab.de/doc/refS.html#struct">struct</a>.</p>
-
-<p>The next arguments are the ones expected by the C function. They can be Integers, Strings, Fixpoint numbers (cons pair) or Structures. In this case it’s:</p>
-
-<pre><code class="language-C">int nn_getsockopt (int s, int level, int option, void *optval, size_t *optvallen);
+<pre><code class="language-C">..
+enum json_value_type {
+    JSONError   = -1,
+    JSONNull    = 1,
+    JSONString  = 2,
+..
 </code></pre>
 
-<p>The first three are Integers. We have an internal function called <code class="language-plaintext highlighter-rouge">symbol-val</code> which returns the value of the “constant” (string) specified. Example:</p>
+<p>When working with a native C library in PicoLisp, it’s important to use the same (or very similar) symbol names to avoid confusion.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">:</span> <span class="p">(</span><span class="nv">symbol-val</span> <span class="s">"NN_RCVFD"</span><span class="p">)</span>
-<span class="nv">-&gt;</span> <span class="mi">11</span>
+<h1 id="native-calls-ffi-bindings">Native calls (ffi-bindings)</h1>
+
+<p><a href="https://github.com/kgabis/parson/">Parson</a> is a very simple C library, with functions accepting zero to three arguments, and returning simple validated values and structures.</p>
+
+<p>Example:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">json-type</span> <span class="p">(</span><span class="nv">json-parse-string</span> <span class="s">"{\"Hello\":\"World\"}"</span><span class="p">))</span>
+<span class="nv">-&gt;</span> <span class="mi">4</span>
 </code></pre></div></div>
+
+<p>This returns <code class="language-plaintext highlighter-rouge">4</code> which is <code class="language-plaintext highlighter-rouge">*JSONObject</code> based on our variables defined earlier.</p>
+
+<p>As we’ll see later, our <code class="language-plaintext highlighter-rouge">picolisp-json</code> library can make decisions on how to parse data based on these types of results.</p>
+
+<h1 id="internal-functions">Internal functions</h1>
+
+<p>The meat of this library is in the internal functions. The <code class="language-plaintext highlighter-rouge">(json-parse-string)</code> and <code class="language-plaintext highlighter-rouge">(json-parse-file)</code> functions validate the JSON string. If those calls are successful, then we can safely iterate over the result and generate our own list.</p>
+
+<h2 id="decoding-json">decoding JSON</h2>
+
+<p>We’ll begin by looking at how JSON is decoded in this library.</p>
+
+<h3 id="iterate-object">(iterate-object)</h3>
+
+<p>We’ll first look at the <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function. This is a recursive function which loops and iterates through the results of each native C call, and quickly builds a sexy PicoLisp list.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-object</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">make</span>
+    <span class="p">(</span><span class="k">let</span> <span class="nv">Type</span> <span class="p">(</span><span class="nv">json-type</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb">case</span> <span class="nv">Type</span>  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONArray</span>    <span class="p">(</span><span class="nv">link-json-array</span>  <span class="nv">Value</span><span class="p">))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONObject</span>   <span class="p">(</span><span class="nv">link-json-object</span> <span class="nv">Value</span><span class="p">))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONString</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-string</span>  <span class="nv">Value</span><span class="p">)))</span>
+                  <span class="nv">[</span><span class="o">`</span><span class="nv">*JSONBoolean</span>  <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nb">cond</span>
+                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">1</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'true</span><span class="p">)</span>
+                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">0</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'false</span><span class="p">)</span> <span class="nv">]</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNumber</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-number</span>  <span class="nv">Value</span><span class="p">)))</span>
+                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNull</span>     <span class="p">(</span><span class="nv">chain</span> <span class="ss">'null</span><span class="p">))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>Lots of meat there.</p>
+
+<h3 id="make">(make)</h3>
+
+<p>We’ve seen <a href="http://software-lab.de/doc/refM.html#make">make</a> before, but I didn’t fully explain it.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(make)</code> function is the instigator for building a list. You put it at the top or start of your function, and watch it build lists using <a href="http://software-lab.de/doc/refL.html#link">link</a> and <a href="http://software-lab.de/doc/refC.html#chain">chain</a>.</p>
+
+<p>We use <a href="http://software-lab.de/doc/refC.html#case">case</a> here as our switch statement. This concept is similar in other programming language. This <code class="language-plaintext highlighter-rouge">(case)</code> call compares the <code class="language-plaintext highlighter-rouge">Type</code> value with those defined as global variables. If a match is found, it runs the following expression. Otherwise it returns <code class="language-plaintext highlighter-rouge">NIL</code> (aka: stop looping, i’m done damnit!).</p>
+
+<p>JSON Arrays and Objects are a bit more tricky to parse, so we’ll get to those later. In the case of <code class="language-plaintext highlighter-rouge">String, Boolean, Number or Null</code>, we add them to the list using <code class="language-plaintext highlighter-rouge">(chain)</code>.</p>
+
+<h3 id="link-json-array">(link-json-array)</h3>
+
+<p>When the value is an Array (<code class="language-plaintext highlighter-rouge">Type = 5 = *JSONArray</code>), we loop through it to build a list (arrays are mapped as lists).</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">link-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">json-array</span> <span class="nv">Value</span><span class="p">)</span>
+    <span class="p">(</span><span class="nv">link</span> <span class="nv">T</span><span class="p">)</span>
+    <span class="p">(</span><span class="nv">for</span> <span class="nv">N</span> <span class="p">(</span><span class="nv">json-array-get-count</span> <span class="nv">Arr</span><span class="p">)</span>
+      <span class="p">(</span><span class="k">let</span> <span class="nv">Val</span> <span class="p">(</span><span class="nv">json-array-get-value</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">dec</span> <span class="nv">N</span><span class="p">))</span>
+        <span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>You’ll notice we added <code class="language-plaintext highlighter-rouge">(link T)</code> before the <a href="http://software-lab.de/doc/refF.html#f">for loop</a>. After long discussions with Alexander Burger, it was made clear that a marker is required to differentiate Objects from Arrays (in PicoLisp). We do that by appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(for)</code> loop is rather simple, but in each case we’re obtaining new values by performing native C calls, and then adding to the list using <code class="language-plaintext highlighter-rouge">(link)</code>.</p>
+
+<p>If you’ve had your coffee today, you would notice the <a href="http://software-lab.de/doc/refD.html#dec">dec</a> call. As it turns out, <code class="language-plaintext highlighter-rouge">(for)</code> starts with 1 and counts to the total number of items in the Array. We use <code class="language-plaintext highlighter-rouge">(dec N)</code> to start at 0.</p>
+
+<p>Example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>for N 5
+  N = 1
+  (json-array-get-value Arr 0)
+  ..
+  N = 2
+  (json-array-get-value Arr 1)
+  ..
+</code></pre></div></div>
+
+<p>Finally, the <code class="language-plaintext highlighter-rouge">(link)</code> function makes a call to <code class="language-plaintext highlighter-rouge">(iterate-object)</code>. Remember earlier? when <code class="language-plaintext highlighter-rouge">(link-json-array)</code> was called within <code class="language-plaintext highlighter-rouge">(iterate-object)</code>?</p>
+
+<p><strong>Note:</strong> This is called recursion, where a function calls itself (in our case, with a different value). You can <a href="https://encrypted.google.com/search?hl=en&amp;q=recursion">ask Google</a> about it.</p>
+
+<p>The reason we perform this recursion is in case the value in the array is itself an array or an object. The <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function will simply return a string, boolean, number or null otherwise.</p>
+
+<h3 id="link-json-object">(link-json-object)</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">(link-json-object)</code> is similar to <code class="language-plaintext highlighter-rouge">(link-json-array)</code> except, you guessed it, it loops over objects.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">..</span>
+<span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">Name</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">)))</span>
+<span class="o">..</span>
+</code></pre></div></div>
+
+<p>The other difference is during the <code class="language-plaintext highlighter-rouge">(link)</code> call, it appends a <a href="http://software-lab.de/doc/refC.html#cons">cons</a> pair instead of a single value. We do this because a JSON Object is represented as a <code class="language-plaintext highlighter-rouge">(cons)</code> pair in PicoLisp.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">{</span><span class="s">"hello"</span><span class="err">:</span><span class="s">"world"</span><span class="nv">}</span> <span class="nv">&lt;-&gt;</span> <span class="o">'</span><span class="p">((</span><span class="s">"hello"</span> <span class="o">.</span> <span class="s">"world"</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Of course, this function also recursively calls <code class="language-plaintext highlighter-rouge">(iterate-object)</code>.</p>
+
+<h2 id="encoding-json">encoding JSON</h2>
+
+<p>Decoding was fun, because <code class="language-plaintext highlighter-rouge">Parson</code> did most of the work for us. Encoding is ugly, so I tried to make it as simple and intuitive as possible (less chance for bugs).</p>
+
+<h3 id="iterate-list">(iterate-list)</h3>
+
+<p>Since we now have a friendly JSON string represented as a PicoLisp list, we’ll iterate over it and turn it back into a JSON string.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-list</span> <span class="p">(</span><span class="nv">Item</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="nv">Value</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Item</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">or</span>
+      <span class="p">(</span><span class="nv">get-null</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-boolean</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-number</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-string</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">get-json-array</span> <span class="nv">Value</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">make-object</span> <span class="nv">Value</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>This is a bit sneaky, but I :heart: it. I’m not sure how efficient it is either, but it works well, and I’d rather have <em>slow, but valid data</em> than <em>fast, but invalid data</em></p>
 
 <blockquote>
-  <p><strong>Note:</strong> There’s some magic behind this, because the Nanomsg C library authors created a function called <code class="language-plaintext highlighter-rouge">nn-symbol</code> which allows you to fetch every exported C constant, along with their values. That’s a really brilliant and helpful feature for people writing ffi-bindings. With most C libraries, you’ll need to define all the constants yourself.</p>
+  <p>It’s not slow, in fact it’s incredibly fast based on my opinion of what fast looks like.</p>
 </blockquote>
 
-<p>The 4th is the tricky one. It’s a Structure.</p>
+<p>This function uses <a href="http://software-lab.de/doc/refO.html#or">or</a> as a conditional statement. The <code class="language-plaintext highlighter-rouge">Value</code> passes through each function to determine the type of value it is, as well as to convert it to a string, number, boolean, null, or whatever.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">cons</span> <span class="ss">'Buf</span> <span class="nv">&amp;buf</span> <span class="mi">0</span><span class="p">)</span>
+<h3 id="get-null">(get-null)</h3>
+
+<p>This function does nothing special, but I wanted to show something interesting.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-null</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">==</span> <span class="ss">'null</span> <span class="nv">Value</span><span class="p">)</span> <span class="s">"null"</span><span class="p">)</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>The <em>Structure</em> argument (a C pointer) is a list which must follow a very specific format:</p>
+<p>You’ll notice we check if <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">==</code> to <code class="language-plaintext highlighter-rouge">'null</code>. What’s going on here? Using double equal signs checks for <a href="http://software-lab.de/doc/ref.html#cmp"><strong>Pointer equality</strong></a>. This is really important, make sure you understand the difference for a happy PicoLisp life.</p>
 
-<ul>
-  <li>a variable as the <code class="language-plaintext highlighter-rouge">car</code>. In our case we call it <code class="language-plaintext highlighter-rouge">Buf</code>. This variable will receive the result set in the pointer (also, potentially a structure).</li>
-  <li>a cons pair which will be sent to the C function.</li>
-  <li>An (optional) initialization value for the rest of the structure.</li>
-</ul>
+<p>This checks if the things we’re comparing are not just equal, but also <em>identical</em>. In other words: Is <code class="language-plaintext highlighter-rouge">null</code> the exact same thing as <code class="language-plaintext highlighter-rouge">null</code> (<code class="language-plaintext highlighter-rouge">Value</code>). Not <code class="language-plaintext highlighter-rouge">"null"</code> or <code class="language-plaintext highlighter-rouge">NULL</code> or any other variation, but <code class="language-plaintext highlighter-rouge">null</code>. Yes. Got it?</p>
 
-<p>There are much more details available in the <a href="http://software-lab.de/doc/refN.html#native">native</a> documentation.</p>
+<h3 id="get-json-array">(get-json-array)</h3>
 
-<p>We could have replaced the above with this:</p>
+<p>You should remember earlier we discussed appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list, in the case of an Array.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">cons</span> <span class="ss">'Buf</span> <span class="p">(</span><span class="mi">8192</span> <span class="nv">B</span> <span class="o">.</span> <span class="mi">8192</span><span class="p">)</span> <span class="mi">0</span><span class="p">)</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">=T</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Value</span><span class="p">))</span> <span class="p">(</span><span class="nb">make-array</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Value</span><span class="p">)))</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>This would automatically create a buffer (in memory) of <code class="language-plaintext highlighter-rouge">8192 Bytes</code> (set to 0), and expect a result of <code class="language-plaintext highlighter-rouge">8192 Bytes</code> to be returned. Of course, all values which aren’t filled in the result will be set to <code class="language-plaintext highlighter-rouge">0</code>.</p>
+<p>What we’re doing here is checking if the <a href="http://software-lab.de/doc/refC.html#car">car</a> of the <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">T</code>. If yes, then call the <code class="language-plaintext highlighter-rouge">(make-array)</code> function.</p>
 
-<blockquote>
-  <p><strong>Note:</strong> What’s nice about using <code class="language-plaintext highlighter-rouge">native</code> to allocate buffers is the memory is free’d once the call completes. If you use <code class="language-plaintext highlighter-rouge">malloc</code> directly, then you need to free the memory as well. There’s no fun in that.</p>
-</blockquote>
+<h3 id="make-array">(make-array)</h3>
 
-<h2 id="2-internal">2. internal</h2>
+<p>This function builds an Array suitable for JSON.</p>
 
-<p>I mentioned earlier the existence of a magical <code class="language-plaintext highlighter-rouge">nn-symbol</code> function. We use this to fetch all the C constants, and store them in an association list (key/value pairs).</p>
-
-<h3 id="nn_symbols">*NN_Symbols</h3>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">fetch-symbols</span> <span class="p">()</span>
-  <span class="p">(</span><span class="k">let</span> <span class="p">(</span><span class="nv">Index</span> <span class="mi">-1</span> <span class="nv">P</span><span class="p">)</span>
-    <span class="p">(</span><span class="nv">make</span>
-      <span class="p">(</span><span class="nv">while</span> <span class="p">(</span><span class="nv">nn-symbol</span> <span class="p">(</span><span class="nv">inc</span> <span class="ss">'Index</span><span class="p">)</span> <span class="o">'</span><span class="p">(</span><span class="nv">P</span> <span class="p">(</span><span class="mi">4</span> <span class="o">.</span> <span class="nv">I</span><span class="p">)))</span>
-        <span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">@</span> <span class="nv">P</span><span class="p">))</span> <span class="nv">]</span>
-
-<span class="p">(</span><span class="k">setq</span> <span class="nv">*NN_Symbols</span> <span class="p">(</span><span class="nv">fetch-symbols</span><span class="p">))</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nb">make-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">pack</span> <span class="s">"["</span>
+        <span class="p">(</span><span class="nv">glue</span> <span class="s">","</span>
+              <span class="p">(</span><span class="nb">mapcar</span>
+                <span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
+                <span class="nv">Value</span> <span class="p">)</span> <span class="p">)</span>
+        <span class="s">"]"</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>This <code class="language-plaintext highlighter-rouge">*NN_Symbols</code> internal global variable is created at runtime. It sets the local <code class="language-plaintext highlighter-rouge">Index</code> variable to <code class="language-plaintext highlighter-rouge">-1</code>, and the local <code class="language-plaintext highlighter-rouge">P</code> variable to <code class="language-plaintext highlighter-rouge">NIL</code> (no value = NIL).</p>
+<p>We’ve seen what <a href="http://software-lab.de/doc/refP.html#pack">pack</a> does. We use it to build our Array with opening and closing <code class="language-plaintext highlighter-rouge">[]</code> brackets.</p>
 
-<p>It then uses <a href="http://software-lab.de/doc/refM.html#make">make</a> and <a href="http://software-lab.de/doc/refL.html#link">link</a> to generate a list from the result of the <a href="http://software-lab.de/doc/refW.html#while">while</a> loop.</p>
+<p>The cool thing I discovered recently is <a href="http://software-lab.de/doc/refG.html#glue">glue</a>. It is similar to <code class="language-plaintext highlighter-rouge">Array.join()</code> in Ruby and JavaScript, by concatenating a list with the supplied argument. In our case, it’s a comma <code class="language-plaintext highlighter-rouge">,</code>.</p>
 
-<p>The <code class="language-plaintext highlighter-rouge">while</code> loop calls <code class="language-plaintext highlighter-rouge">nn-symbol</code> by using <a href="http://software-lab.de/doc/refI.html#inc">inc</a> to increment the <code class="language-plaintext highlighter-rouge">Index</code> by <code class="language-plaintext highlighter-rouge">1</code>. The second argument to <code class="language-plaintext highlighter-rouge">nn-symbol</code> is a <em>Structure</em> as we’ve seen earlier, which is really just one Integer of 4 Bytes.</p>
+<p>Here we’re doing something a little different.</p>
 
-<p>What’s interesting is the way this magic function works. It returns the name of the constant (ex: <code class="language-plaintext highlighter-rouge">"NN_RCVFD"</code>), but it sets the value of the constant in the buffer, which we assign to the variable <code class="language-plaintext highlighter-rouge">P</code> (ex: <code class="language-plaintext highlighter-rouge">11</code>).</p>
+<p>If you remember <code class="language-plaintext highlighter-rouge">(mapcar)</code>, you’ll know the first argument is a function, but in this code we have this:</p>
 
-<p>We create a <code class="language-plaintext highlighter-rouge">cons</code> pair using the <a href="http://software-lab.de/doc/ref.html#atres">@ result</a> as the <code class="language-plaintext highlighter-rouge">car</code>, and the <code class="language-plaintext highlighter-rouge">P</code> result as the <code class="language-plaintext highlighter-rouge">cdr</code>. In this case, the <code class="language-plaintext highlighter-rouge">@</code> result refers to the value returned by the <code class="language-plaintext highlighter-rouge">nn-symbol</code> call.</p>
-
-<blockquote>
-  <p><strong>Note:</strong> In English, this means <code class="language-plaintext highlighter-rouge">P</code> will contain a 4-byte Integer (value) and <code class="language-plaintext highlighter-rouge">@</code> will contain the constant’s name.</p>
-</blockquote>
-
-<p>If the <code class="language-plaintext highlighter-rouge">nn-symbol</code> call returns <code class="language-plaintext highlighter-rouge">NIL</code>, then we’ve reached the end of the list of constants, so the <code class="language-plaintext highlighter-rouge">while</code> loop exits, and our <code class="language-plaintext highlighter-rouge">*NN_Symbols</code> variable is fully set:</p>
-
-<p>Here is a truncated <code class="language-plaintext highlighter-rouge">*NN_Symbols</code> list from nanomsg 0.5-beta:</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
-<span class="p">((</span><span class="s">"NN_NS_NAMESPACE"</span> <span class="o">.</span> <span class="mi">0</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_VERSION"</span> <span class="o">.</span> <span class="mi">1</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_DOMAIN"</span> <span class="o">.</span> <span class="mi">2</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_TRANSPORT"</span> <span class="o">.</span> <span class="mi">3</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_PROTOCOL"</span> <span class="o">.</span> <span class="mi">4</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_OPTION_LEVEL"</span> <span class="o">.</span> <span class="mi">5</span><span class="p">)</span> <span class="p">(</span><span class="s">"NN_NS_SOCKET_OPTION"</span> <span class="o">.</span> <span class="mi">6</span><span class="p">)</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
 </code></pre></div></div>
 
-<p>Cool.</p>
+<p>Above is an <strong>anonymous function</strong>. If you’re familiar with Ruby, it looks something like this:</p>
 
-<h3 id="symbol-val">symbol-val</h3>
-
-<p>This function is quite simple. It fetches the <code class="language-plaintext highlighter-rouge">cdr</code> (the value) of the constant by it’s name, by searching through the association list.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">symbol-val</span> <span class="p">(</span><span class="nv">Symbol</span><span class="p">)</span>
-  <span class="p">(</span><span class="nb">cdr</span> <span class="p">(</span><span class="nb">assoc</span> <span class="nv">Symbol</span> <span class="nv">*NN_Symbols</span><span class="p">))</span> <span class="p">)</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">-&gt;</span><span class="p">(</span><span class="no">N</span><span class="p">)</span> <span class="p">{</span> <span class="n">iterate</span><span class="o">-</span><span class="n">list</span> <span class="p">[</span><span class="kp">nil</span><span class="p">,</span> <span class="no">N</span><span class="p">]</span> <span class="p">}</span>
 </code></pre></div></div>
 
-<h3 id="exit-with-error">exit-with-error</h3>
+<p>In the case of PicoLisp, our function that we defined on the fly will be applied to the <code class="language-plaintext highlighter-rouge">Value</code>, but will first make a recursive call to <code class="language-plaintext highlighter-rouge">(iterate-list)</code> with a <code class="language-plaintext highlighter-rouge">(cons)</code> pair as its argument.</p>
 
-<p>There’s nothing special about this function. I simply wanted to highlight the <a href="http://software-lab.de/doc/refT.html#throw">throw</a> call, which stops the execution and returns a cons pair (error):</p>
+<h3 id="make-object">(make-object)</h3>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">exit-with-error</span> <span class="p">(</span><span class="nv">Sock</span> <span class="nv">Endpoint</span><span class="p">)</span>
-  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nb">and</span> <span class="nv">Endpoint</span> <span class="p">(</span><span class="nv">ge0</span> <span class="nv">Endpoint</span><span class="p">))</span> <span class="p">(</span><span class="nv">nn-shutdown</span> <span class="nv">Sock</span> <span class="nv">Endpoint</span><span class="p">))</span>
-  <span class="p">(</span><span class="nb">when</span> <span class="nv">Sock</span> <span class="p">(</span><span class="nv">nn-close</span> <span class="nv">Sock</span><span class="p">))</span>
-  <span class="p">(</span><span class="k">throw</span> <span class="ss">'InternalError</span> <span class="p">(</span><span class="nb">cons</span> <span class="ss">'NanomsgError</span> <span class="p">(</span><span class="nv">nn-strerror</span> <span class="p">(</span><span class="nv">nn-errno</span><span class="p">)))</span> <span class="p">)</span> <span class="p">)</span>
-</code></pre></div></div>
-
-<p>This can be caught with <code class="language-plaintext highlighter-rouge">(catch 'InternalError</code>. The return value is a list which will contain <code class="language-plaintext highlighter-rouge">'NanomsgError</code> in the <code class="language-plaintext highlighter-rouge">car</code>, and a String in the <code class="language-plaintext highlighter-rouge">cdr</code>.</p>
-
-<h3 id="make-socket">make-socket</h3>
-
-<p>I won’t go into detail about the <code class="language-plaintext highlighter-rouge">make-socket</code> internal function, but I was pleased to discover the <a href="http://software-lab.de/doc/refD.html#default">default</a> function, which assigns a default value to a variable.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">make-socket</span> <span class="p">(</span><span class="nv">Addr</span> <span class="nv">Type</span> <span class="nv">Flag</span> <span class="nv">Domain</span><span class="p">)</span>
-  <span class="p">(</span><span class="nv">default</span> <span class="nv">Domain</span> <span class="s">"AF_SP"</span><span class="p">)</span>
-</code></pre></div></div>
-
-<p>In this case, we assign the default value <code class="language-plaintext highlighter-rouge">"AF_SP"</code> to the variable <code class="language-plaintext highlighter-rouge">Domain</code> which is sent as an argument to the function. If <code class="language-plaintext highlighter-rouge">Domain</code> is set (non-NIL), then its value is not re-assigned.</p>
-
-<h3 id="non-blocking-io">non-blocking-io</h3>
-
-<p>Sometimes you want to do something, sometimes you don’t. That’s a binary decision (0 or 1), and functions which return a true/false’ish type of result are called predicates. <a href="http://software-lab.de/doc/refB.html#bool">bool</a> is a nice predicate which returns <code class="language-plaintext highlighter-rouge">T</code> if the value is set.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">non-blocking-io</span> <span class="p">(</span><span class="nv">Dontwait</span><span class="p">)</span>
-   <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">bool</span> <span class="nv">Dontwait</span><span class="p">)</span> <span class="p">(</span><span class="nv">symbol-val</span> <span class="s">"NN_DONTWAIT"</span><span class="p">))</span> <span class="p">)</span>
-</code></pre></div></div>
-
-<p>In this call, we want to return the value of the constant <code class="language-plaintext highlighter-rouge">NN_DONTWAIT</code>, but only if the <code class="language-plaintext highlighter-rouge">Dontwait</code> argument is set. Otherwise it returns <code class="language-plaintext highlighter-rouge">NIL</code>. This is kind of a hack, since it can be set to anything and it will always return the value of the constant.</p>
-
-<p>There might be a better way to do this.</p>
-
-<h2 id="3-public">3. public</h2>
-
-<p>We’ve defined quite a few public functions which can be called from outside the library. Nanomsg doesn’t provide these, so we made them in order to make your life easier. Instead of interacting directly with the <code class="language-plaintext highlighter-rouge">native</code> function calls, you can use a simple <em>public function</em> and move on with your life.</p>
-
-<p>I’ll only explain the <code class="language-plaintext highlighter-rouge">msg-recv</code> function, since it does some pretty cool stuff.</p>
-
-<h3 id="msg-recv">msg-recv</h3>
-
-<p>This function can be called in blocking or non-blocking mode. It will listen on a socket and wait for a message to arrive.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">msg-recv</span> <span class="p">(</span><span class="nv">Sock</span> <span class="nv">Dontwait</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let</span> <span class="nv">Result</span> <span class="p">(</span><span class="nv">nn-recv</span> <span class="nv">Sock</span> <span class="o">'</span><span class="p">(</span><span class="o">`</span><span class="nv">MSG_MAX_SIZE</span> <span class="nv">B</span> <span class="o">.</span> <span class="o">`</span><span class="nv">MSG_MAX_SIZE</span><span class="p">)</span> <span class="nv">MSG_MAX_SIZE</span> <span class="p">(</span><span class="nv">non-blocking-io</span> <span class="nv">Dontwait</span><span class="p">)</span> <span class="p">)</span>
-    <span class="p">(</span><span class="nb">unless</span> <span class="p">(</span><span class="nv">exit-with-error-maybe</span> <span class="nv">Dontwait</span> <span class="nv">Result</span> <span class="nv">Sock</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">mapcar</span> <span class="nb">char</span> <span class="p">(</span><span class="nv">head</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Result</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Result</span><span class="p">))))</span> <span class="nv">]</span>
-</code></pre></div></div>
-
-<p>The first thing you’ll notice is this crazy argument sent to <code class="language-plaintext highlighter-rouge">nn-recv</code>. It’s something we saw earlier: <code class="language-plaintext highlighter-rouge">'(8192 B . 8192)</code>. The reason we use the <a href="http://software-lab.de/doc/refB.html#bool">backtick</a> (backquote) is to immediately evaluate the expression. You’ll notice the list is quoted with a <a href="http://software-lab.de/doc/refQ.html#quote">single quote</a> for an unevaluated expression, but in fact we want to evaluate that <code class="language-plaintext highlighter-rouge">MSG_MAX_SIZE</code> constant right away (turn it into <code class="language-plaintext highlighter-rouge">8192</code>).</p>
-
-<p>The next line will essentially exit the application depending on the result of the <code class="language-plaintext highlighter-rouge">nn-recv</code> call and the value of the <code class="language-plaintext highlighter-rouge">Dontwait</code> variable.</p>
-
-<p>The meat is here:</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">mapcar</span> <span class="nb">char</span> <span class="p">(</span><span class="nv">head</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Result</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Result</span><span class="p">))))</span>
-</code></pre></div></div>
-
-<p>As you know, <a href="http://software-lab.de/doc/refC.html#cdr">cdr</a> returns the result of the list (everything after the 1st element). And <a href="http://software-lab.de/doc/refC.html#car">car</a> returns the 1st element of the list.</p>
-
-<p>When you pass these to <a href="http://software-lab.de/doc/refH.html#head">head</a>, it will return only the first N elements (first argument) of the list (2nd argument).</p>
-
-<p>For example:</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span> <span class="nv">Result</span> <span class="p">(</span><span class="mi">12</span> <span class="mi">104</span> <span class="mi">101</span> <span class="mi">108</span> <span class="mi">108</span> <span class="mi">111</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">8</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">))</span>
-<span class="nv">-&gt;</span> <span class="p">(</span><span class="mi">12</span> <span class="mi">104</span> <span class="mi">101</span> <span class="mi">108</span> <span class="mi">108</span> <span class="mi">111</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">8</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">)</span>
-<span class="err">:</span> <span class="p">(</span><span class="nv">head</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Result</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Result</span><span class="p">))</span>
-<span class="nv">-&gt;</span> <span class="p">(</span><span class="mi">104</span> <span class="mi">101</span> <span class="mi">108</span> <span class="mi">108</span> <span class="mi">111</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">8</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span><span class="p">)</span>
-</code></pre></div></div>
-
-<p>Here we fetched the first <code class="language-plaintext highlighter-rouge">12</code> elements of the list.</p>
-
-<p>If you didn’t know, <a href="http://software-lab.de/doc/refC.html#char">char</a> will return a Unicode character when you pass a Number as the argument.</p>
-
-<p>The use of <a href="http://software-lab.de/doc/refM.html#mapcar">mapcar</a> is to iterate over the list, with the <code class="language-plaintext highlighter-rouge">char</code> function – essentially calling <code class="language-plaintext highlighter-rouge">char</code> on every element in the list.</p>
-
-<p>The <a href="http://software-lab.de/doc/refP.html#pack">pack</a> function will remove all NIL values from the list. If you try to <code class="language-plaintext highlighter-rouge">(char 0)</code> you’ll see it returns NIL.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">:</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">mapcar</span> <span class="nb">char</span> <span class="p">(</span><span class="nv">head</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Result</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Result</span><span class="p">))))</span>
-<span class="nv">-&gt;</span> <span class="s">"hello^H"</span>
-</code></pre></div></div>
-
-<blockquote>
-  <p><strong>Note:</strong> What this means is it receives the 8K buffer which contains a bunch of zeros at the end (assuming you didn’t fill the buffer), it maps over the list, sets the zeros to NIL, packs it and you end up with a nice friendly string.</p>
-</blockquote>
-
-<p>This might also be a huge hack, but I thought it was cool and functional. Very open to suggestions on how to improve it.</p>
+<p>This function is almost identical to <code class="language-plaintext highlighter-rouge">(make-array)</code>, except it generates a JSON Object using opening and closing <code class="language-plaintext highlighter-rouge">{}</code> braces, of course iterating recursively with <code class="language-plaintext highlighter-rouge">(iterate-list)</code>.</p>
 
   </div>
   

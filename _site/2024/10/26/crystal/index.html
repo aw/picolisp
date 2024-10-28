@@ -11,7 +11,7 @@
 
   <title>
     
-      PicoLisp FFI with Zig &middot; PicoLisp Libraries
+      PicoLisp FFI with Crystal &middot; PicoLisp Libraries
     
   </title>
 
@@ -115,43 +115,43 @@
 
     <div class="content container">
       <div class="post">
-  <h1 class="post-title">PicoLisp FFI with Zig</h1>
-  <span class="post-date">09 Jan 2023</span>
-  <p>You can <a href="https://github.com/aw/picolisp-zig">get it on GitHub</a>.</p>
+  <h1 class="post-title">PicoLisp FFI with Crystal</h1>
+  <span class="post-date">26 Oct 2024</span>
+  <p>You can <a href="https://github.com/aw/picolisp-crystal">get it on GitHub</a>.</p>
 
-<p>This repo provides a simple example of how to use <a href="https://software-lab.de/down.html">PicoLisp</a> with <a href="https://ziglang.org/download/">Zig</a> using PicoLisp’s FFI <code class="language-plaintext highlighter-rouge">(native)</code> functionality.</p>
+<p>This repo provides a simple example of how to use <a href="https://software-lab.de/down.html">PicoLisp</a> with <a href="https://crystal-lang.org/install/">Crystal</a> using PicoLisp’s FFI <code class="language-plaintext highlighter-rouge">(native)</code> functionality.</p>
 
-<p>This is similar to <a href="https://github.com/aw/picolisp-rust">picolisp-rust</a> except written for <em>Zig</em>.</p>
+<p>This is similar to <a href="https://github.com/aw/picolisp-zig">picolisp-zig</a> and <a href="https://github.com/aw/picolisp-rust">picolisp-rust</a>, except written for <em>Crystal</em>.</p>
 
 <h1 id="requirements">Requirements</h1>
 
 <ul>
-  <li>Zig <code class="language-plaintext highlighter-rouge">v0.6+</code></li>
-  <li>PicoLisp 64-bit <code class="language-plaintext highlighter-rouge">v17.12+</code> or <code class="language-plaintext highlighter-rouge">pil21</code></li>
+  <li>Crystal <code class="language-plaintext highlighter-rouge">v1.14+</code></li>
+  <li>PicoLisp 64-bit <code class="language-plaintext highlighter-rouge">pil21</code></li>
+  <li>Development libraries <code class="language-plaintext highlighter-rouge">apt-get install libevent-dev libpcre3-dev</code></li>
 </ul>
 
 <h1 id="getting-started">Getting started</h1>
 
-<p>Once you’ve setup <em>PicoLisp</em> and <em>Zig</em>, simply type <code class="language-plaintext highlighter-rouge">make</code> to build and test the shared library.</p>
+<p>Once you’ve setup <em>PicoLisp</em> and <em>Crystal</em>, simply type <code class="language-plaintext highlighter-rouge">make</code> to build and test the shared library.</p>
 
 <h1 id="output">Output</h1>
 
 <p>Before I explain what’s going on, here’s what the output should look like:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Received struct: pil.PilStruct{ .byte1 = 32, .byte2 = 33, .character1 = 67, .character2 = 68, .int = -1, .long = 1, .string = u8@4847464544434241, .array = { 1, 2, 3, 4, 5, 6, 7, 8 } }
-Result code: 0
-Extracted struct: 
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Result code: 0
+Extracted struct:
 (de Extracted (42 43)
    ("A" "B")
    65535
    9223372036854775807
-   "pilzig"
+   "pilcrystal"
    (80 105 99 111 76 105 115 112) )
 </code></pre></div></div>
 
 <h1 id="explain">Explain</h1>
 
-<p>The code can be found in <a href="extract.l">extract.l</a> and <a href="pil.zig">pil.zig</a>. The <em>Zig</em> code is designed as a <strong>shared library</strong> and can be called by PicoLisp’s <strong>(native)</strong> function to pass data to/from between both languages.</p>
+<p>The code can be found in <a href="extract.l">extract.l</a> and <a href="pil.cr">pil.cr</a>. The <em>Crystal</em> code is designed as a <strong>shared library</strong> and can be called by PicoLisp’s <strong>(native)</strong> function to pass data to/from between both languages.</p>
 
 <h2 id="picolisp-code-explanation">PicoLisp code explanation</h2>
 
@@ -173,7 +173,7 @@ Extracted struct:
 <pre><code class="language-picolisp">(native "./libpil.so" "extract" 'I P)
 </code></pre>
 
-<p>This calls the <code class="language-plaintext highlighter-rouge">extract</code> function from the <em>Zig</em> library, with the <code class="language-plaintext highlighter-rouge">P</code> struct as its only parameter. It expects a 32-bit signed integer <code class="language-plaintext highlighter-rouge">I</code> as the return value (it will be either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">-1</code>).</p>
+<p>This calls the <code class="language-plaintext highlighter-rouge">extract</code> function from the <em>Crystal</em> library, with the <code class="language-plaintext highlighter-rouge">P</code> struct as its only parameter. It expects a 32-bit signed integer <code class="language-plaintext highlighter-rouge">I</code> as the return value (it will be either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">-1</code>).</p>
 
 <p>Next, the code will extract the <code class="language-plaintext highlighter-rouge">P</code> structure using the specification described above:</p>
 
@@ -182,30 +182,32 @@ Extracted struct:
 
 <p>Finally, the code will free the previously allocated memory and print the result of the <code class="language-plaintext highlighter-rouge">P</code> structure.</p>
 
-<p>Some tests run at the end to ensure the data received from <em>Zig</em> is what we expected.</p>
+<p>Some tests run at the end to ensure the data received from <em>Crystal</em> is what we expected.</p>
 
 <h3 id="note">Note</h3>
 
 <ul>
-  <li>The values sent to the <em>Zig</em> library will be printed by <em>Zig</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code>.</li>
-  <li>The values received from the <em>Zig</em> library will be printed by <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Extracted struct:</code>.</li>
+  <li>The values sent to the <em>Crystal</em> library will be printed by <em>Crystal</em> and tested with the <em>spec</em> equivalence tests.</li>
+  <li>The values received from the <em>Crystal</em> library will be printed by <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Extracted struct:</code>.</li>
 </ul>
 
-<h2 id="zig-code-explanation">Zig code explanation</h2>
+<h2 id="crystal-code-explanation">Crystal code explanation</h2>
 
-<p>The <em>Zig</em> code defines the struct for the received data; it is named <code class="language-plaintext highlighter-rouge">PilStruct</code> and contains the exact same specification as the <code class="language-plaintext highlighter-rouge">P</code> struct in the <em>PicoLisp code explanation</em>.</p>
+<p><strong>WARNING:</strong> I’m not certain if <em>Crystal</em> accepts <strong>null pointers</strong>, so this code should be <strong>considered dangerous</strong> since it doesn’t explicitly perform input validation or checks.</p>
+
+<p>The <em>Crystal</em> code defines the struct for the received data; it is named <code class="language-plaintext highlighter-rouge">PilStruct</code> in the <code class="language-plaintext highlighter-rouge">C</code> lib, and contains the exact same specification as the <code class="language-plaintext highlighter-rouge">P</code> struct in the <em>PicoLisp code explanation</em>.</p>
 
 <p>The <code class="language-plaintext highlighter-rouge">extract()</code> function creates a new struct in the variable <code class="language-plaintext highlighter-rouge">newstruct</code> which contains some new values, different from what was received by <em>PicoLisp</em>.</p>
 
-<p>Luckily, the <em>Zig</em> pointers <a href="https://ziglang.org/learn/overview/#optional-type-instead-of-null-pointers">cannot be <strong>null</strong></a> so there’s no need to check for that.</p>
+<p>The code then dereferences the pointer into a variable named <code class="language-plaintext highlighter-rouge">mystruct</code> and runs some tests on the entire struct received from <em>PicoLisp</em>. If any of the tests fail, an exception will be raised (in <em>Crystal</em>) and a stack trace will appear in the output</p>
 
-<p>The code then dereferences the pointer and prints what it received (the entire struct) from <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code> (mentioned earlier).</p>
-
-<p>Finally, it writes the <code class="language-plaintext highlighter-rouge">newstruct</code> struct to the pointer and returns <code class="language-plaintext highlighter-rouge">0</code>. <em>PicoLisp</em> can then read the return code and the new struct data.</p>
+<p>Finally, it overwrites the <code class="language-plaintext highlighter-rouge">mystruct</code> values with the new ones from <code class="language-plaintext highlighter-rouge">newstruct</code>, and returns <code class="language-plaintext highlighter-rouge">0</code>. <em>PicoLisp</em> can then read the return code and the new struct data.</p>
 
 <h1 id="thoughts">Thoughts</h1>
 
-<p>There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s <em>not</em> written in <em>C</em> or <em>Rust</em> and which works perfectly with <em>PicoLisp</em>.</p>
+<p>There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s <em>not</em> written in <em>C</em> or <em>Rust</em> or <em>Zig</em> and which works perfectly with <em>PicoLisp</em>.</p>
+
+<p>Enjoy!</p>
 
 </div>
 
@@ -215,9 +217,9 @@ Extracted struct:
     
       <li>
         <h3>
-          <a href="https://picolisp.a1w.ca/2024/10/26/crystal/">
-            PicoLisp FFI with Crystal
-            <small>26 Oct 2024</small>
+          <a href="https://picolisp.a1w.ca/2023/01/09/zig/">
+            PicoLisp FFI with Zig
+            <small>09 Jan 2023</small>
           </a>
         </h3>
       </li>

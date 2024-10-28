@@ -4,13 +4,112 @@
  <title>PicoLisp Libraries</title>
  <link href="https://picolisp.a1w.ca/atom.xml" rel="self"/>
  <link href="https://picolisp.a1w.ca/"/>
- <updated>2023-01-09T10:14:33+09:00</updated>
+ <updated>2024-10-28T09:03:40+09:00</updated>
  <id>https://picolisp.a1w.ca</id>
  <author>
    <name>Alexander Williams</name>
    <email></email>
  </author>
 
+ 
+ <entry>
+   <title>PicoLisp FFI with Crystal</title>
+   <link href="https://picolisp.a1w.ca/2024/10/26/crystal/"/>
+   <updated>2024-10-26T00:00:00+09:00</updated>
+   <id>https://picolisp.a1w.ca/2024/10/26/crystal</id>
+   <content type="html">&lt;p&gt;You can &lt;a href=&quot;https://github.com/aw/picolisp-crystal&quot;&gt;get it on GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This repo provides a simple example of how to use &lt;a href=&quot;https://software-lab.de/down.html&quot;&gt;PicoLisp&lt;/a&gt; with &lt;a href=&quot;https://crystal-lang.org/install/&quot;&gt;Crystal&lt;/a&gt; using PicoLisp’s FFI &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(native)&lt;/code&gt; functionality.&lt;/p&gt;
+
+&lt;p&gt;This is similar to &lt;a href=&quot;https://github.com/aw/picolisp-zig&quot;&gt;picolisp-zig&lt;/a&gt; and &lt;a href=&quot;https://github.com/aw/picolisp-rust&quot;&gt;picolisp-rust&lt;/a&gt;, except written for &lt;em&gt;Crystal&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;requirements&quot;&gt;Requirements&lt;/h1&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Crystal &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;v1.14+&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;PicoLisp 64-bit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pil21&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Development libraries &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;apt-get install libevent-dev libpcre3-dev&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&quot;getting-started&quot;&gt;Getting started&lt;/h1&gt;
+
+&lt;p&gt;Once you’ve setup &lt;em&gt;PicoLisp&lt;/em&gt; and &lt;em&gt;Crystal&lt;/em&gt;, simply type &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;make&lt;/code&gt; to build and test the shared library.&lt;/p&gt;
+
+&lt;h1 id=&quot;output&quot;&gt;Output&lt;/h1&gt;
+
+&lt;p&gt;Before I explain what’s going on, here’s what the output should look like:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Result code: 0
+Extracted struct:
+(de Extracted (42 43)
+   (&quot;A&quot; &quot;B&quot;)
+   65535
+   9223372036854775807
+   &quot;pilcrystal&quot;
+   (80 105 99 111 76 105 115 112) )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;explain&quot;&gt;Explain&lt;/h1&gt;
+
+&lt;p&gt;The code can be found in &lt;a href=&quot;extract.l&quot;&gt;extract.l&lt;/a&gt; and &lt;a href=&quot;pil.cr&quot;&gt;pil.cr&lt;/a&gt;. The &lt;em&gt;Crystal&lt;/em&gt; code is designed as a &lt;strong&gt;shared library&lt;/strong&gt; and can be called by PicoLisp’s &lt;strong&gt;(native)&lt;/strong&gt; function to pass data to/from between both languages.&lt;/p&gt;
+
+&lt;h2 id=&quot;picolisp-code-explanation&quot;&gt;PicoLisp code explanation&lt;/h2&gt;
+
+&lt;p&gt;First, the code allocates 32 bytes of memory, which will be used to store data in a &lt;a href=&quot;https://software-lab.de/doc/refS.html#struct&quot;&gt;struct&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;It then creates a struct named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; with the following specification:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2 arbitrary bytes&lt;/li&gt;
+  &lt;li&gt;2-bytes containing valid UTF-8 characters&lt;/li&gt;
+  &lt;li&gt;1x 32-bit (4 bytes) signed integer&lt;/li&gt;
+  &lt;li&gt;1x 64-bit (8 bytes) signed long&lt;/li&gt;
+  &lt;li&gt;1x 8-byte null-terminated string&lt;/li&gt;
+  &lt;li&gt;1x 8-byte arbitrary bytes array&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Then the following &lt;a href=&quot;https://software-lab.de/doc/refN.html#native&quot;&gt;native&lt;/a&gt; call is made and its result is stored in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Res&lt;/code&gt; variable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;./libpil.so&quot; &quot;extract&quot; &apos;I P)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This calls the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract&lt;/code&gt; function from the &lt;em&gt;Crystal&lt;/em&gt; library, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct as its only parameter. It expects a 32-bit signed integer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;I&lt;/code&gt; as the return value (it will be either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;Next, the code will extract the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure using the specification described above:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P &apos;((B . 2) (C . 2) I N S (B . 8)))
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally, the code will free the previously allocated memory and print the result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure.&lt;/p&gt;
+
+&lt;p&gt;Some tests run at the end to ensure the data received from &lt;em&gt;Crystal&lt;/em&gt; is what we expected.&lt;/p&gt;
+
+&lt;h3 id=&quot;note&quot;&gt;Note&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The values sent to the &lt;em&gt;Crystal&lt;/em&gt; library will be printed by &lt;em&gt;Crystal&lt;/em&gt; and tested with the &lt;em&gt;spec&lt;/em&gt; equivalence tests.&lt;/li&gt;
+  &lt;li&gt;The values received from the &lt;em&gt;Crystal&lt;/em&gt; library will be printed by &lt;em&gt;PicoLisp&lt;/em&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Extracted struct:&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;crystal-code-explanation&quot;&gt;Crystal code explanation&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;WARNING:&lt;/strong&gt; I’m not certain if &lt;em&gt;Crystal&lt;/em&gt; accepts &lt;strong&gt;null pointers&lt;/strong&gt;, so this code should be &lt;strong&gt;considered dangerous&lt;/strong&gt; since it doesn’t explicitly perform input validation or checks.&lt;/p&gt;
+
+&lt;p&gt;The &lt;em&gt;Crystal&lt;/em&gt; code defines the struct for the received data; it is named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PilStruct&lt;/code&gt; in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;C&lt;/code&gt; lib, and contains the exact same specification as the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct in the &lt;em&gt;PicoLisp code explanation&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract()&lt;/code&gt; function creates a new struct in the variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;newstruct&lt;/code&gt; which contains some new values, different from what was received by &lt;em&gt;PicoLisp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;The code then dereferences the pointer into a variable named &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mystruct&lt;/code&gt; and runs some tests on the entire struct received from &lt;em&gt;PicoLisp&lt;/em&gt;. If any of the tests fail, an exception will be raised (in &lt;em&gt;Crystal&lt;/em&gt;) and a stack trace will appear in the output&lt;/p&gt;
+
+&lt;p&gt;Finally, it overwrites the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mystruct&lt;/code&gt; values with the new ones from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;newstruct&lt;/code&gt;, and returns &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt;. &lt;em&gt;PicoLisp&lt;/em&gt; can then read the return code and the new struct data.&lt;/p&gt;
+
+&lt;h1 id=&quot;thoughts&quot;&gt;Thoughts&lt;/h1&gt;
+
+&lt;p&gt;There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s &lt;em&gt;not&lt;/em&gt; written in &lt;em&gt;C&lt;/em&gt; or &lt;em&gt;Rust&lt;/em&gt; or &lt;em&gt;Zig&lt;/em&gt; and which works perfectly with &lt;em&gt;PicoLisp&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Enjoy!&lt;/p&gt;
+</content>
+ </entry>
  
  <entry>
    <title>PicoLisp FFI with Zig</title>
@@ -70,14 +169,14 @@ Extracted struct:
 
 &lt;p&gt;Then the following &lt;a href=&quot;https://software-lab.de/doc/refN.html#native&quot;&gt;native&lt;/a&gt; call is made and its result is stored in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Res&lt;/code&gt; variable:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;./libpil.so&quot; &quot;extract&quot; 'I P)
+&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;./libpil.so&quot; &quot;extract&quot; &apos;I P)
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;This calls the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract&lt;/code&gt; function from the &lt;em&gt;Zig&lt;/em&gt; library, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct as its only parameter. It expects a 32-bit signed integer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;I&lt;/code&gt; as the return value (it will be either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt;).&lt;/p&gt;
 
 &lt;p&gt;Next, the code will extract the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure using the specification described above:&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P '((B . 2) (C . 2) I N S (B . 8)))
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P &apos;((B . 2) (C . 2) I N S (B . 8)))
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Finally, the code will free the previously allocated memory and print the result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure.&lt;/p&gt;
@@ -183,14 +282,14 @@ Extracted struct:
 
 &lt;p&gt;Then the following &lt;a href=&quot;https://software-lab.de/doc/refN.html#native&quot;&gt;native&lt;/a&gt; call is made and its result is stored in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Res&lt;/code&gt; variable:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;target/debug/libpilrust.so&quot; &quot;extract&quot; 'I P)
+&lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(native &quot;target/debug/libpilrust.so&quot; &quot;extract&quot; &apos;I P)
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;This calls the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;extract&lt;/code&gt; function from the &lt;em&gt;Rust&lt;/em&gt; library, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; struct as its only parameter. It expects a 32-bit signed integer &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;I&lt;/code&gt; as the return value (it will be either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt;).&lt;/p&gt;
 
 &lt;p&gt;Next, the code will extract the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure using the specification described above:&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P '((B . 2) (C . 2) I N S (B . 8)))
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(struct P &apos;((B . 2) (C . 2) I N S (B . 8)))
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Finally, the code will free the previously allocated memory and print the result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;P&lt;/code&gt; structure.&lt;/p&gt;
@@ -280,12 +379,12 @@ Extracted struct:
 
 &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Verbose output is enabled by default and can be disabled with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(off *PMQ_verbose)&lt;/code&gt;.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;[2020-09-17T03:37:15] Opened queue: Name='/myqueue', FD=3
-[2020-09-17T03:37:15] Send: String='Hello World', Priority=0, FD=3
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;[2020-09-17T03:37:15] Opened queue: Name=&apos;/myqueue&apos;, FD=3
+[2020-09-17T03:37:15] Send: String=&apos;Hello World&apos;, Priority=0, FD=3
 [2020-09-17T03:37:15] Get attributes: Flags=0, Maxmsg=10, Msgsize=8192, Curmsgs=1, FD=3
-[2020-09-17T03:37:15] Receive: String='Hello World' (12 Bytes), FD=3
+[2020-09-17T03:37:15] Receive: String=&apos;Hello World&apos; (12 Bytes), FD=3
 [2020-09-17T03:37:15] Closed queue: FD=3
-[2020-09-17T03:37:15] Unlinked queue: Name='/myqueue'
+[2020-09-17T03:37:15] Unlinked queue: Name=&apos;/myqueue&apos;
 -&amp;gt; 0
 &lt;/code&gt;&lt;/pre&gt;
 
@@ -481,7 +580,7 @@ Options:
   &lt;li&gt;Load the client library in your project: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(load &quot;libkvclient.l&quot;)&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;Set the server password &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(setq *KV_pass &quot;yourpass&quot;)&lt;/code&gt;&lt;/li&gt;
   &lt;li&gt;Start the client listener with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-start-client)&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;Send your command and arguments with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-send-data '(&quot;INFO&quot; &quot;server&quot;))&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Send your command and arguments with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-send-data &apos;(&quot;INFO&quot; &quot;server&quot;))&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;p&gt;Received data will be returned as-is (list, integer, string, etc). Wrap the result like: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-print Result)&lt;/code&gt; to send the output to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;STDOUT&lt;/code&gt;:&lt;/p&gt;
@@ -492,13 +591,13 @@ Options:
 -&amp;gt; &quot;yourpass&quot;
 : (kv-start-client)
 -&amp;gt; T
-: (kv-send-data '(&quot;set&quot; &quot;mykey&quot; 12345))
+: (kv-send-data &apos;(&quot;set&quot; &quot;mykey&quot; 12345))
 -&amp;gt; &quot;OK&quot;
-: (kv-send-data '(&quot;get&quot; &quot;mykey&quot;))
+: (kv-send-data &apos;(&quot;get&quot; &quot;mykey&quot;))
 -&amp;gt; 12345
-: (kv-send-data '(&quot;set&quot; &quot;yourkey&quot; &quot;12345&quot;))
+: (kv-send-data &apos;(&quot;set&quot; &quot;yourkey&quot; &quot;12345&quot;))
 -&amp;gt; &quot;OK&quot;
-: (kv-send-data '(&quot;get&quot; &quot;yourkey&quot;))
+: (kv-send-data &apos;(&quot;get&quot; &quot;yourkey&quot;))
 -&amp;gt; &quot;12345&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -554,7 +653,7 @@ Parent PID: 38867
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# client.l
 Usage:                    ./client.l --pass &amp;lt;pass&amp;gt; COMMAND [arguments]
 
-Example:                  ./client.l --pass foobared --encrypt SET mysecret -- &amp;lt;(echo 'mypass')
+Example:                  ./client.l --pass foobared --encrypt SET mysecret -- &amp;lt;(echo &apos;mypass&apos;)
 
 Options:
 --help                    Show this help message and exit
@@ -565,11 +664,11 @@ Options:
 --name  &amp;lt;name&amp;gt;            Easily identifiable client name (default: randomly generated)
 --host  &amp;lt;host&amp;gt;            Hostname or IP of the key/value server (default: localhost)
 --pass  &amp;lt;data&amp;gt;            Password used to access the server (required)
---poll  &amp;lt;seconds&amp;gt;         Number of seconds for polling the key/value server (default: don't poll)
+--poll  &amp;lt;seconds&amp;gt;         Number of seconds for polling the key/value server (default: don&apos;t poll)
 --port  &amp;lt;port&amp;gt;            TCP port of the key/value server (default: 6378)
 -- STDIN                  Reads an argument from STDIN
 
-COMMAND LIST              Commands are case-insensitive and don't always require arguments
+COMMAND LIST              Commands are case-insensitive and don&apos;t always require arguments
 
   APPEND key value          		Append a value to a key
   BGSAVE                    		Asynchronously save the dataset to disk
@@ -731,7 +830,7 @@ COMMAND LIST              Commands are case-insensitive and don't always require
   &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Manually modifying the AOF will require recomputing and replacing the hash with the result from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(kv-hash)&lt;/code&gt; or PicoLisp &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(hash)&lt;/code&gt;.&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(hash '(&quot;RPUSH&quot; &quot;mytestlist&quot; (&quot;four&quot; &quot;five&quot; &quot;zero&quot;)))
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(hash &apos;(&quot;RPUSH&quot; &quot;mytestlist&quot; (&quot;four&quot; &quot;five&quot; &quot;zero&quot;)))
 -&amp;gt; 61453
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -788,7 +887,7 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
     architecture: src64
 
 - name: Print Hello World with the full PicoLisp version number
-  run: pil -'prin &quot;Hello World: &quot;' -version -bye
+  run: pil -&apos;prin &quot;Hello World: &quot;&apos; -version -bye
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;example-workflow&quot;&gt;Example workflow&lt;/h2&gt;
@@ -878,7 +977,7 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
   &lt;li&gt;Call S3: List bucket content&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service s3 --request PUT --data @myfile.json --header 'content-type' 'application/json' --host awscurl-sample-bucket.s3.amazonaws.com --region us-east-1 --endpoint '/bucket/myfile.json'
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service s3 --request PUT --data @myfile.json --header &apos;content-type&apos; &apos;application/json&apos; --host awscurl-sample-bucket.s3.amazonaws.com --region us-east-1 --endpoint &apos;/bucket/myfile.json&apos;
 # NOTE: for files &amp;gt; 1KB, disable Expect header with: --header Expect &quot;&quot;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -886,18 +985,18 @@ It can be used to run PicoLisp code such as &lt;a href=&quot;https://github.com/
   &lt;li&gt;Call EC2 (DescribeRegions):&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --query 'Action=DescribeRegions&amp;amp;Version=2013-10-15'
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --query &apos;Action=DescribeRegions&amp;amp;Version=2013-10-15&apos;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Call EC2 (ImportKeyPair):
-    &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service ec2 --region ap-northeast-1 --host ap-northeast-1.ec2.amazonaws.com --query 'Action=ImportKeyPair&amp;amp;KeyName=my-key&amp;amp;Version=2016-11-15' --request POST --data 'PublicKeyMaterial=c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDMkxIRitwY1g3ZmRtVWZRMm53TUt5ZmQ5ZktFQWVaY2dOblB5UDhCdmZnTGtSREZsZjV5ODR5Q09UbWdlS05Fd2Y1Ujhoei9ySmNwVEpNcURNS0pnS29qWVp5bWNTYzhROFpsY3lQdm5BYXZ5UEJVdUZYbUZMRDlpckNBcXREK3cxSEFpaVNlZyszdXN1VC9Vc1NKNWNOU3g4em5lSVhmMW9aSzJHQmswck90cEtwVy94c3gyNnNtUWNQWkxCMVYxSVc5NmRkbm1kUTNtQU1RNndPVUtSMytwckRWN2dhc2xOUjVTdkdaZnFreGpaUHNXcFNGRFlqN3I3WkU5MjB3YjIrT1RHQ1NIa21maUlDNVI3REdrUEc3emhEbk1yMHVlb3Qra1JRNjE4bklvQTVDeFhiaHdJalFYVTRFYjl3YVZsaXhmeGpmY1hjZGcwSEMyRnc5SHAgYWxleAo='
+    &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service ec2 --region ap-northeast-1 --host ap-northeast-1.ec2.amazonaws.com --query &apos;Action=ImportKeyPair&amp;amp;KeyName=my-key&amp;amp;Version=2016-11-15&apos; --request POST --data &apos;PublicKeyMaterial=c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDMkxIRitwY1g3ZmRtVWZRMm53TUt5ZmQ5ZktFQWVaY2dOblB5UDhCdmZnTGtSREZsZjV5ODR5Q09UbWdlS05Fd2Y1Ujhoei9ySmNwVEpNcURNS0pnS29qWVp5bWNTYzhROFpsY3lQdm5BYXZ5UEJVdUZYbUZMRDlpckNBcXREK3cxSEFpaVNlZyszdXN1VC9Vc1NKNWNOU3g4em5lSVhmMW9aSzJHQmswck90cEtwVy94c3gyNnNtUWNQWkxCMVYxSVc5NmRkbm1kUTNtQU1RNndPVUtSMytwckRWN2dhc2xOUjVTdkdaZnFreGpaUHNXcFNGRFlqN3I3WkU5MjB3YjIrT1RHQ1NIa21maUlDNVI3REdrUEc3emhEbk1yMHVlb3Qra1JRNjE4bklvQTVDeFhiaHdJalFYVTRFYjl3YVZsaXhmeGpmY1hjZGcwSEMyRnc5SHAgYWxleAo=&apos;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
   &lt;/li&gt;
   &lt;li&gt;Call API Gateway:&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service execute-api --data '{&quot;test&quot;:&quot;json&quot;}' --host '&amp;lt;prefix&amp;gt;.execute-api.us-east-1.amazonaws.com' --endpoint '/&amp;lt;resource&amp;gt;'
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./awscurl.l --service execute-api --data &apos;{&quot;test&quot;:&quot;json&quot;}&apos; --host &apos;&amp;lt;prefix&amp;gt;.execute-api.us-east-1.amazonaws.com&apos; --endpoint &apos;/&amp;lt;resource&amp;gt;&apos;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h1 id=&quot;options&quot;&gt;Options&lt;/h1&gt;
@@ -911,7 +1010,7 @@ Options:
   --endpoint &amp;lt;endpoint&amp;gt;     The API endpoint of the AWS service (default: /)
   --header &amp;lt;key&amp;gt; &amp;lt;value&amp;gt;    HTTP header data (default: None)
   --host &amp;lt;host&amp;gt;             The Host of the AWS service (default: ec2.amazonaws.com)
-  --native                  Use faster 'native' calls for hashing data (64-bit version only, default: False)
+  --native                  Use faster &apos;native&apos; calls for hashing data (64-bit version only, default: False)
   --output &amp;lt;file&amp;gt;           Filename where data should be output (default: STDOUT)
   --protocol http|https     Protocol for talking to AWS (default: https)
   --query &amp;lt;query&amp;gt;           The Query parameters of the AWS service (default: None)
@@ -970,7 +1069,7 @@ Options:
 &lt;p&gt;To work around this issue, I modified the library to &lt;em&gt;disable&lt;/em&gt; namespaces by specifying the environment variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PIL_NAMESPACES=false&lt;/code&gt;.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(unless (= &quot;false&quot; (sys &quot;PIL_NAMESPACES&quot;))
-  (symbols 'json 'pico)
+  (symbols &apos;json &apos;pico)
 
   (local MODULE_INFO *Msg err-throw)
 &lt;/code&gt;&lt;/pre&gt;
@@ -1000,11 +1099,11 @@ Options:
   (pack
     (make
       (while Value
-        (let R (pop 'Value)
+        (let R (pop &apos;Value)
           (cond
-            [(and (= &quot;\\&quot; R) (= &quot;u&quot; (car Value))) (let U (cut 5 'Value) (link (char (hex (pack (tail 4 U) ] # \uNNNN hex
-            [(and (= &quot;\\&quot; R) (= &quot;b&quot; (car Value))) (pop 'Value) (link (char (hex &quot;08&quot;) ] # \b backspace
-            [(and (= &quot;\\&quot; R) (= &quot;f&quot; (car Value))) (pop 'Value) (link (char (hex &quot;0C&quot;) ] # \f formfeed
+            [(and (= &quot;\\&quot; R) (= &quot;u&quot; (car Value))) (let U (cut 5 &apos;Value) (link (char (hex (pack (tail 4 U) ] # \uNNNN hex
+            [(and (= &quot;\\&quot; R) (= &quot;b&quot; (car Value))) (pop &apos;Value) (link (char (hex &quot;08&quot;) ] # \b backspace
+            [(and (= &quot;\\&quot; R) (= &quot;f&quot; (car Value))) (pop &apos;Value) (link (char (hex &quot;0C&quot;) ] # \f formfeed
             (T (link R)) ]
 &lt;/code&gt;&lt;/pre&gt;
 
@@ -1031,10 +1130,10 @@ Options:
 &lt;p&gt;First, we provide the tokenized string to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(json-count-brackets)&lt;/code&gt; function, and map over each character. For each character, we perform the following:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(if (or (= &quot;{&quot; N) (= &quot;[&quot; N))
-    (push 'Json_stack N)
+    (push &apos;Json_stack N)
     (case N
-      (&quot;]&quot; (let R (pop 'Json_stack) (unless (= &quot;[&quot; R) (err-throw &quot;Unmatched JSON brackets '['&quot;))))
-      (&quot;}&quot; (let R (pop 'Json_stack) (unless (= &quot;{&quot; R) (err-throw &quot;Unmatched JSON brackets '{'&quot;)))) ) ) )
+      (&quot;]&quot; (let R (pop &apos;Json_stack) (unless (= &quot;[&quot; R) (err-throw &quot;Unmatched JSON brackets &apos;[&apos;&quot;))))
+      (&quot;}&quot; (let R (pop &apos;Json_stack) (unless (= &quot;{&quot; R) (err-throw &quot;Unmatched JSON brackets &apos;{&apos;&quot;)))) ) ) )
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;ol&gt;
@@ -1045,12 +1144,12 @@ Options:
 &lt;p&gt;Those who are paying attention will notice the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(err-throw)&lt;/code&gt; function. It does two things:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(msg Error)
-(throw 'invalid-json NIL)
+(throw &apos;invalid-json NIL)
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;The &lt;a href=&quot;https://software-lab.de/doc/refM.html#msg&quot;&gt;msg&lt;/a&gt; function will output a message to STDERR, because the &lt;a href=&quot;https://en.wikipedia.org/wiki/Unix_philosophy#Mike_Gancarz:_The_UNIX_Philosophy&quot;&gt;UNIX Philosophy&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;The &lt;a href=&quot;https://software-lab.de/doc/refT.html#throw&quot;&gt;throw&lt;/a&gt; function will raise an error in the program, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'invalid-json&lt;/code&gt; label and a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; return value.&lt;/p&gt;
+&lt;p&gt;The &lt;a href=&quot;https://software-lab.de/doc/refT.html#throw&quot;&gt;throw&lt;/a&gt; function will raise an error in the program, with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;invalid-json&lt;/code&gt; label and a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; return value.&lt;/p&gt;
 
 &lt;p&gt;The decoder will &lt;a href=&quot;https://software-lab.de/doc/refC.html#catch&quot;&gt;catch&lt;/a&gt; the raised error, as it should, but more importantly, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; return value will indicate that decoding failed. This is important for programs which embed this library, as it won’t break a running program, and will behave exactly as expected when &lt;em&gt;something goes wrong&lt;/em&gt;.&lt;/p&gt;
 
@@ -1066,7 +1165,7 @@ Options:
   (or
     (lst? Name)
     (= &quot;}&quot; Name)
-    (err-throw (text &quot;Invalid Object name '@1', must be '}' OR string&quot;, Name) ]
+    (err-throw (text &quot;Invalid Object name &apos;@1&apos;, must be &apos;}&apos; OR string&quot;, Name) ]
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;As you can see, it’s quite simple, and if there’s no match, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(err-throw)&lt;/code&gt; will be called.&lt;/p&gt;
@@ -1089,25 +1188,25 @@ Options:
 &lt;p&gt;Now, look at the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(iterate-object)&lt;/code&gt; function. This is a recursive function which loops and iterates through the global &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*Json&lt;/code&gt; variable, a list which contains the tokenized JSON string, and then quickly builds a sexy PicoLisp list.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;[de iterate-object ()
-  (let Type (pop '*Json)
+  (let Type (pop &apos;*Json)
     (cond
       ((= &quot;[&quot; Type)     (make (link-array T)))
       ((= &quot;{&quot; Type)     (make (link-object)))
       ((lst? Type)      (pack Type))
       ((num? Type)      Type)
-      ((= &quot;-&quot; Type)     (if (num? (car *Json)) (format (pack &quot;-&quot; (pop '*Json))) (iterate-object)))
-      ((= 'true Type)   'true)
-      ((= 'false Type)  'false)
-      ((= 'null Type)   'null)
-      (T                (err-throw (text &quot;Invalid Object '@1', must be '[' OR '{' OR string OR number OR true OR false OR null&quot;, Type) ]
+      ((= &quot;-&quot; Type)     (if (num? (car *Json)) (format (pack &quot;-&quot; (pop &apos;*Json))) (iterate-object)))
+      ((= &apos;true Type)   &apos;true)
+      ((= &apos;false Type)  &apos;false)
+      ((= &apos;null Type)   &apos;null)
+      (T                (err-throw (text &quot;Invalid Object &apos;@1&apos;, must be &apos;[&apos; OR &apos;{&apos; OR string OR number OR true OR false OR null&quot;, Type) ]
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;We treat the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*Json&lt;/code&gt; list as a stack, and iterate through it after popping one or more elements, until there’s nothing left but tears of joy.&lt;/p&gt;
 
 &lt;p&gt;The condition for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;[&lt;/code&gt; will start a new list with &lt;a href=&quot;https://software-lab.de/doc/refM.html#make&quot;&gt;make&lt;/a&gt;, and call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(link-array)&lt;/code&gt; with the argument &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt;. We’ll see why later.&lt;/p&gt;
 
-&lt;p&gt;The rest is quite easy to understand, but I’ll focus on the case of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(= &quot;-&quot; Type)&lt;/code&gt;. The tokenization doesn’t recognize negative numbers, so &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-32&lt;/code&gt; would be tokenized to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'(&quot;-&quot; 32)&lt;/code&gt;. To solve this, we check for a single &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;-&quot;&lt;/code&gt;, and if the next item in the list is a number, then we &lt;a href=&quot;https://software-lab.de/doc/refP.html#pop&quot;&gt;pop&lt;/a&gt; the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;-&quot;&lt;/code&gt;, &lt;a href=&quot;https://software-lab.de/doc/refP.html#pack&quot;&gt;pack&lt;/a&gt; it with the number (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(pack)&lt;/code&gt; creates a string), then use &lt;a href=&quot;https://software-lab.de/doc/refF.html#format&quot;&gt;format&lt;/a&gt; to convert it to a number.
-In other words, our tokenized &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'(&quot;-&quot; 23) -&amp;gt; -23&lt;/code&gt;. Please note, since &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-23&lt;/code&gt; is not a string, this could not have been done in the Unicode parsing stage. It must occur after tokenization with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(str)&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The rest is quite easy to understand, but I’ll focus on the case of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(= &quot;-&quot; Type)&lt;/code&gt;. The tokenization doesn’t recognize negative numbers, so &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-32&lt;/code&gt; would be tokenized to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;(&quot;-&quot; 32)&lt;/code&gt;. To solve this, we check for a single &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;-&quot;&lt;/code&gt;, and if the next item in the list is a number, then we &lt;a href=&quot;https://software-lab.de/doc/refP.html#pop&quot;&gt;pop&lt;/a&gt; the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;-&quot;&lt;/code&gt;, &lt;a href=&quot;https://software-lab.de/doc/refP.html#pack&quot;&gt;pack&lt;/a&gt; it with the number (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(pack)&lt;/code&gt; creates a string), then use &lt;a href=&quot;https://software-lab.de/doc/refF.html#format&quot;&gt;format&lt;/a&gt; to convert it to a number.
+In other words, our tokenized &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;(&quot;-&quot; 23) -&amp;gt; -23&lt;/code&gt;. Please note, since &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-23&lt;/code&gt; is not a string, this could not have been done in the Unicode parsing stage. It must occur after tokenization with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(str)&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;link-array-and-link-object&quot;&gt;(link-array) and (link-object)&lt;/h3&gt;
 
@@ -1115,10 +1214,10 @@ In other words, our tokenized &lt;code class=&quot;language-plaintext highlighte
 
 &lt;pre&gt;&lt;code class=&quot;language-picolisp&quot;&gt;(link-generic &quot;array&quot;
                 &quot;]&quot;
-                '(link (iterate-object))
+                &apos;(link (iterate-object))
 (link-generic &quot;object&quot;
                 &quot;}&quot;
-                '(link-object-value Name) ]
+                &apos;(link-object-value Name) ]
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;They’re quite similar. In both cases, the function will iterate once more over the object, depending on various conditions described in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(link-generic)&lt;/code&gt;.&lt;/p&gt;
@@ -1276,9 +1375,9 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;(load &quot;semver.l&quot;)
 
-(semver-sort '(&quot;1.4.0&quot; &quot;1.6.0&quot; &quot;1.3.0&quot;))
+(semver-sort &apos;(&quot;1.4.0&quot; &quot;1.6.0&quot; &quot;1.3.0&quot;))
 -&amp;gt; ((1 3 0) (1 4 0) (1 6 0))
-(semver-sort '(&quot;1.4.0&quot; &quot;1.6.0&quot; &quot;1.3.0&quot;) T)
+(semver-sort &apos;(&quot;1.4.0&quot; &quot;1.6.0&quot; &quot;1.3.0&quot;) T)
 -&amp;gt; (&quot;1.3.0&quot; &quot;1.4.0&quot; &quot;1.6.0&quot;)
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 </content>
@@ -1329,14 +1428,14 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;h1 id=&quot;namespace-leaky-globals&quot;&gt;Namespace leaky globals&lt;/h1&gt;
 
-&lt;p&gt;Previously, I thought namespaces would protect my variables from modifying the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'pico&lt;/code&gt; namespace.&lt;/p&gt;
+&lt;p&gt;Previously, I thought namespaces would protect my variables from modifying the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;pico&lt;/code&gt; namespace.&lt;/p&gt;
 
 &lt;p&gt;&lt;strong&gt;I was wrong&lt;/strong&gt;.&lt;/p&gt;
 
 &lt;p&gt;Here’s an example:&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;setq&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I am a var&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'mytest&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;mytest&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;pico&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prinl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I am a var&quot;&lt;/span&gt;
@@ -1344,12 +1443,12 @@ if left &amp;gt; right then return  T # left is newer
 &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;so&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;far&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;so&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;good&lt;/span&gt;
 
 &lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;setq&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;You are a var&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prinl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;You are a var&quot;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;What? Yes that’s right, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*Myvar&lt;/code&gt; which was originally in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'pico&lt;/code&gt; (default) namespace was modified from within the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'mytest&lt;/code&gt; namespace. This is normal, but not expected, and quite dangerous actually.&lt;/p&gt;
+&lt;p&gt;What? Yes that’s right, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*Myvar&lt;/code&gt; which was originally in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;pico&lt;/code&gt; (default) namespace was modified from within the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;mytest&lt;/code&gt; namespace. This is normal, but not expected, and quite dangerous actually.&lt;/p&gt;
 
 &lt;h3 id=&quot;the-fix&quot;&gt;The fix&lt;/h3&gt;
 
@@ -1358,7 +1457,7 @@ if left &amp;gt; right then return  T # left is newer
 &lt;p&gt;Let’s try again:&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;setq&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I am a var&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'mytest&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;mytest&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;pico&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;local&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prinl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -1367,7 +1466,7 @@ if left &amp;gt; right then return  T # left is newer
 &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;that&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;looks&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;promising&lt;/span&gt;
 
 &lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;setq&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;You are a var&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;mytest:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prinl&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Myvar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I am a var&quot;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -1387,9 +1486,9 @@ if left &amp;gt; right then return  T # left is newer
 &lt;p&gt;To achieve this, we make use of an external &lt;a href=&quot;http://software-lab.de/doc/refC.html#call&quot;&gt;system call&lt;/a&gt;, the *NIX &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tput&lt;/code&gt; command.&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;colour&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Colour&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cond&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lowc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Colour&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Colours&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;setaf&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cdr&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lowc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Colour&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bold&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bold&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;T&lt;/span&gt;                              &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;sgr0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cond&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;assoc&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lowc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Colour&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Colours&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;setaf&quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cdr&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lowc&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Colour&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bold&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bold&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;T&lt;/span&gt;                              &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;call&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;tput&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;sgr0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -1448,7 +1547,7 @@ if left &amp;gt; right then return  T # left is newer
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;randomize&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*My_tests_are_order_dependent&lt;/span&gt;
       &lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rand&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sort&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;rand&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sort&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;List&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;It first checks if the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*My_tests_are_order_dependent&lt;/code&gt; variable is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; (if it isn’t, don’t randomize).&lt;/p&gt;
@@ -1463,7 +1562,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;execute&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;@&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;mapcar&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prin&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;align&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'*Counter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;) &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;prin&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;align&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;*Counter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;) &quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;randomize&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;rest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -1506,7 +1605,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;h1 id=&quot;bcrypt-hashing-for-picolisp&quot;&gt;bcrypt hashing for PicoLisp&lt;/h1&gt;
 
-&lt;p&gt;Only the following functions are exported publicly, and namespaced with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(symbols 'bcrypt)&lt;/code&gt; (or the prefix: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bcrypt~&lt;/code&gt;):&lt;/p&gt;
+&lt;p&gt;Only the following functions are exported publicly, and namespaced with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(symbols &apos;bcrypt)&lt;/code&gt; (or the prefix: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bcrypt~&lt;/code&gt;):&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;&lt;strong&gt;(gensalt Factor)&lt;/strong&gt; generates a salt to be used for hashing a string
@@ -1530,7 +1629,7 @@ if left &amp;gt; right then return  T # left is newer
 &lt;/ul&gt;
 
 &lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; These functions are not namespace &lt;a href=&quot;http://software-lab.de/doc/refL.html#local&quot;&gt;local symbols&lt;/a&gt;, which means they would redefine symbols with the same name in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'pico&lt;/code&gt; namespace.&lt;/p&gt;
+  &lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; These functions are not namespace &lt;a href=&quot;http://software-lab.de/doc/refL.html#local&quot;&gt;local symbols&lt;/a&gt;, which means they would redefine symbols with the same name in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;pico&lt;/code&gt; namespace.&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h3 id=&quot;notes&quot;&gt;Notes&lt;/h3&gt;
@@ -1538,7 +1637,7 @@ if left &amp;gt; right then return  T # left is newer
 &lt;ul&gt;
   &lt;li&gt;The default cost Factor is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;12&lt;/code&gt;.&lt;/li&gt;
   &lt;li&gt;As rule of thumb, when using bcrypt to hash passwords, it should take &lt;em&gt;at least 1 second&lt;/em&gt; per hash. Adjust the cost Factor based on the result of a few (timing) runs.&lt;/li&gt;
-  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'InternalError&lt;/code&gt; message will be thrown if there’s an error.&lt;/li&gt;
+  &lt;li&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;InternalError&lt;/code&gt; message will be thrown if there’s an error.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h1 id=&quot;examples&quot;&gt;Examples&lt;/h1&gt;
@@ -1549,7 +1648,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bcrypt.l&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;gensalt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$2a$12$mQn1fUDeEZFW74KD5kU6g.&quot;&lt;/span&gt;
 
@@ -1563,7 +1662,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bcrypt.l&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;hashpw&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;changeme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$2a$12$mmxN/qk8yvfjCx./KXtgfuqnUFsXjYv1ZTZmkMtdQ94rTDngiXpsq&quot;&lt;/span&gt;
 
@@ -1580,14 +1679,14 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bcrypt.l&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compare&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;changeme&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$2a$14$kjOSmjZeLsBdru7NRPEmQuL5eU5YN4Yb48bD1A0Pxzwu/3G/7kwBy&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;T&lt;/span&gt;
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compare&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;changeme&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;$2a$12$2Lgk0P5s5VsxDUM2aa/HFu/6DwHce1lbUwJ1kTm092DwEeDRHHYBy&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt;
 
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compare&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;changeme&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I have no idea what i'm doing&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;compare&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;changeme&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;I have no idea what i&apos;m doing&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;BcryptError&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Unable to hash password&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -1597,7 +1696,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bcrypt.l&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;bcrypt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;timing&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;12&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
@@ -1710,18 +1809,18 @@ if left &amp;gt; right then return  T # left is newer
 &lt;/ol&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;throw-error&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Session&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'HttpsError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Session&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;HttpsError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Session&lt;/span&gt;
                                               &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-get-error&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
                                               &lt;span class=&quot;nv&quot;&gt;Message&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;The &lt;strong&gt;Neon C library&lt;/strong&gt; has a function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(ne-get-error)&lt;/code&gt; which returns a string containing an error message (if any). Sometimes, we want to provide our own error message though.&lt;/p&gt;
 
-&lt;p&gt;In the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(throw-error)&lt;/code&gt; function, we satisfy the first two requirements by using &lt;a href=&quot;http://software-lab.de/doc/refT.html#throw&quot;&gt;throw&lt;/a&gt; to send an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'InternalError&lt;/code&gt;, along with a &lt;a href=&quot;http://software-lab.de/doc/refC.html#cons&quot;&gt;cons&lt;/a&gt; pair containing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'HttpsError&lt;/code&gt; &lt;em&gt;type&lt;/em&gt; in the &lt;a href=&quot;http://software-lab.de/doc/refC.html#car&quot;&gt;car&lt;/a&gt; and the error &lt;em&gt;message&lt;/em&gt; in the &lt;a href=&quot;http://software-lab.de/doc/refC.html#cdr&quot;&gt;cdr&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(throw-error)&lt;/code&gt; function, we satisfy the first two requirements by using &lt;a href=&quot;http://software-lab.de/doc/refT.html#throw&quot;&gt;throw&lt;/a&gt; to send an &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;InternalError&lt;/code&gt;, along with a &lt;a href=&quot;http://software-lab.de/doc/refC.html#cons&quot;&gt;cons&lt;/a&gt; pair containing the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;HttpsError&lt;/code&gt; &lt;em&gt;type&lt;/em&gt; in the &lt;a href=&quot;http://software-lab.de/doc/refC.html#car&quot;&gt;car&lt;/a&gt; and the error &lt;em&gt;message&lt;/em&gt; in the &lt;a href=&quot;http://software-lab.de/doc/refC.html#cdr&quot;&gt;cdr&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;The third requirement is satisfied in user applications with something like this:&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;println&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'InternalError&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;println&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;InternalError&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
 &lt;span class=&quot;nv&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HttpsError&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Could not connect to server: Connection timed out&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -1733,7 +1832,7 @@ if left &amp;gt; right then return  T # left is newer
 
 &lt;h2 id=&quot;making-https-requests&quot;&gt;making HTTPS requests&lt;/h2&gt;
 
-&lt;p&gt;PicoLisp 64-bit got a new feature in 2015: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;destructuring 'let'&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;PicoLisp 64-bit got a new feature in 2015: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;destructuring &apos;let&apos;&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;If you’re coming from other languages such as Ruby, you would destructure an array like this:&lt;/p&gt;
 
@@ -1780,7 +1879,7 @@ if left &amp;gt; right then return  T # left is newer
 
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-set-server-auth&lt;/span&gt;
     &lt;span class=&quot;nv&quot;&gt;Session&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lisp&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'ne_auth_creds&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;D&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;do-auth&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;D&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;lisp&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;ne_auth_creds&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;D&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;do-auth&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;C&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;D&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
     &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -1848,7 +1947,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;set-headers&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;mapcar&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-add-request-header&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;car&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cdr&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-add-request-header&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;car&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cdr&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;append&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Headers&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*Headers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -1867,10 +1966,10 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;set-request-body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-          &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;malloc&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'N&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+          &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;malloc&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;N&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;memset&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buffer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;strncpy&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'N&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buffer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;@&quot;&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;strncpy&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;N&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-set-request-body-buffer&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buffer&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
         &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -1900,13 +1999,13 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
                     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;download-file&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Filename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
                     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;process-body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
-        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;end-request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'done&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;end-request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;done&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;nv&quot;&gt;Body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;In this function, we’ve got an infinite &lt;a href=&quot;http://software-lab.de/doc/refL.html#loop&quot;&gt;loop&lt;/a&gt; which tries to make a request, save the &lt;strong&gt;response body&lt;/strong&gt; to a file or whatever, and exits the loop when all is good.&lt;/p&gt;
 
-&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(end-request)&lt;/code&gt; function implements a &lt;em&gt;retry&lt;/em&gt; mechanism, and returns either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; (or throws an error). If the result is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt;, we execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'done&lt;/code&gt;, which is nothing really, and return the response body. Otherwise it loops.&lt;/p&gt;
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(end-request)&lt;/code&gt; function implements a &lt;em&gt;retry&lt;/em&gt; mechanism, and returns either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NIL&lt;/code&gt; (or throws an error). If the result is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;T&lt;/code&gt;, we execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;done&lt;/code&gt;, which is nothing really, and return the response body. Otherwise it loops.&lt;/p&gt;
 
 &lt;p&gt;There’s something &lt;em&gt;very&lt;/em&gt; different in this function though. Do you see it?&lt;/p&gt;
 
@@ -1966,7 +2065,7 @@ void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
 &lt;p&gt;Without going into too much detail for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(parse-response)&lt;/code&gt;, I want to discuss something we haven’t seen yet: &lt;a href=&quot;http://software-lab.de/doc/refS.html#struct&quot;&gt;struct&lt;/a&gt;.&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-get-status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*ne_status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;structure&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ne-get-status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Request&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;S&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;#&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*ne_status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Status&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;structure&lt;/span&gt;
 &lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
@@ -2132,10 +2231,10 @@ enum json_value_type {
                   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONObject&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;link-json-object&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
                   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONString&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-string&lt;/span&gt;  &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
                   &lt;span class=&quot;nv&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONBoolean&lt;/span&gt;  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cond&lt;/span&gt;
-                                            &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-boolean&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-                                            &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-boolean&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
+                                            &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-boolean&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                                            &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-boolean&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
                   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONNumber&lt;/span&gt;   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;json-number&lt;/span&gt;  &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
-                  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONNull&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
+                  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*JSONNull&lt;/span&gt;     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;chain&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Lots of meat there.&lt;/p&gt;
@@ -2196,7 +2295,7 @@ enum json_value_type {
 
 &lt;p&gt;The other difference is during the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(link)&lt;/code&gt; call, it appends a &lt;a href=&quot;http://software-lab.de/doc/refC.html#cons&quot;&gt;cons&lt;/a&gt; pair instead of a single value. We do this because a JSON Object is represented as a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(cons)&lt;/code&gt; pair in PicoLisp.&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;world&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;lt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;world&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;world&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;lt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;hello&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;world&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Of course, this function also recursively calls &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(iterate-object)&lt;/code&gt;.&lt;/p&gt;
@@ -2233,10 +2332,10 @@ enum json_value_type {
 &lt;p&gt;This function does nothing special, but I wanted to show something interesting.&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;get-null&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'null&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;null&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;null&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;null&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;You’ll notice we check if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Value&lt;/code&gt; is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;==&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'null&lt;/code&gt;. What’s going on here? Using double equal signs checks for &lt;a href=&quot;http://software-lab.de/doc/ref.html#cmp&quot;&gt;&lt;strong&gt;Pointer equality&lt;/strong&gt;&lt;/a&gt;. This is really important, make sure you understand the difference for a happy PicoLisp life.&lt;/p&gt;
+&lt;p&gt;You’ll notice we check if &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Value&lt;/code&gt; is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;==&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;null&lt;/code&gt;. What’s going on here? Using double equal signs checks for &lt;a href=&quot;http://software-lab.de/doc/ref.html#cmp&quot;&gt;&lt;strong&gt;Pointer equality&lt;/strong&gt;&lt;/a&gt;. This is really important, make sure you understand the difference for a happy PicoLisp life.&lt;/p&gt;
 
 &lt;p&gt;This checks if the things we’re comparing are not just equal, but also &lt;em&gt;identical&lt;/em&gt;. In other words: Is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;null&lt;/code&gt; the exact same thing as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;null&lt;/code&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Value&lt;/code&gt;). Not &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;null&quot;&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NULL&lt;/code&gt; or any other variation, but &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;null&lt;/code&gt;. Yes. Got it?&lt;/p&gt;
 
@@ -2258,7 +2357,7 @@ enum json_value_type {
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pack&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;[&quot;&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;glue&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;,&quot;&lt;/span&gt;
               &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;mapcar&lt;/span&gt;
-                &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;iterate-list&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+                &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;iterate-list&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
                 &lt;span class=&quot;nv&quot;&gt;Value&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
         &lt;span class=&quot;s&quot;&gt;&quot;]&quot;&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -2271,7 +2370,7 @@ enum json_value_type {
 
 &lt;p&gt;If you remember &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(mapcar)&lt;/code&gt;, you’ll know the first argument is a function, but in this code we have this:&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;iterate-list&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;iterate-list&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NIL&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Above is an &lt;strong&gt;anonymous function&lt;/strong&gt;. If you’re familiar with Ruby, it looks something like this:&lt;/p&gt;
@@ -2324,7 +2423,7 @@ enum json_value_type {
 
 &lt;p&gt;PicoLisp allows you to define namespaces for your functions, using &lt;a href=&quot;http://software-lab.de/doc/refS.html#symbols&quot;&gt;symbols&lt;/a&gt;. It’s similar to the concept of &lt;em&gt;Modules&lt;/em&gt; in Ruby.&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'nanomsg&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;nanomsg&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;pico&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;Here, we create a namespace called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nanomsg&lt;/code&gt; which is a copy of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pico&lt;/code&gt; (default) namespace.&lt;/p&gt;
@@ -2336,7 +2435,7 @@ enum json_value_type {
 
 &lt;p&gt;Or you can switch namespace by declaring it first:&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'nanomsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbols&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;nanomsg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-errno&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -2376,11 +2475,11 @@ enum json_value_type {
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nn-getsockopt&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Level&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Option&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;amp;buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;use&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*Nanomsg&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;nn_getsockopt&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'I&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;native&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;*Nanomsg&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;nn_getsockopt&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;I&lt;/span&gt;
                                         &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt;
                                         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbol-val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Level&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
                                         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;symbol-val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Option&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-                                        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;amp;buf&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                                        &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;amp;buf&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
                                         &lt;span class=&quot;nv&quot;&gt;Length&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
       &lt;span class=&quot;nv&quot;&gt;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
@@ -2441,7 +2540,7 @@ enum json_value_type {
 
 &lt;p&gt;The 4th is the tricky one. It’s a Structure.&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;amp;buf&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;Buf&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;&amp;amp;buf&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;The &lt;em&gt;Structure&lt;/em&gt; argument (a C pointer) is a list which must follow a very specific format:&lt;/p&gt;
@@ -2456,7 +2555,7 @@ enum json_value_type {
 
 &lt;p&gt;We could have replaced the above with this:&lt;/p&gt;
 
-&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'Buf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8192&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8192&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;Buf&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8192&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;8192&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;This would automatically create a buffer (in memory) of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8192 Bytes&lt;/code&gt; (set to 0), and expect a result of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8192 Bytes&lt;/code&gt; to be returned. Of course, all values which aren’t filled in the result will be set to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0&lt;/code&gt;.&lt;/p&gt;
@@ -2474,7 +2573,7 @@ enum json_value_type {
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fetch-symbols&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Index&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;-1&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;P&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;make&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-symbol&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'Index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;P&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;while&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-symbol&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;inc&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;Index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;P&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;I&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;link&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;@&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;P&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 
 &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;setq&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;*NN_Symbols&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;fetch-symbols&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
@@ -2519,10 +2618,10 @@ enum json_value_type {
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;exit-with-error&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Endpoint&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;ge0&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-shutdown&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;when&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-close&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;'NanomsgError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-strerror&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-errno&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;InternalError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cons&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;&apos;NanomsgError&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-strerror&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-errno&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;This can be caught with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(catch 'InternalError&lt;/code&gt;. The return value is a list which will contain &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'NanomsgError&lt;/code&gt; in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;car&lt;/code&gt;, and a String in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cdr&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This can be caught with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(catch &apos;InternalError&lt;/code&gt;. The return value is a list which will contain &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;NanomsgError&lt;/code&gt; in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;car&lt;/code&gt;, and a String in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cdr&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;make-socket&quot;&gt;make-socket&lt;/h3&gt;
 
@@ -2557,12 +2656,12 @@ enum json_value_type {
 &lt;p&gt;This function can be called in blocking or non-blocking mode. It will listen on a socket and wait for a message to arrive.&lt;/p&gt;
 
 &lt;div class=&quot;language-lisp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;[de&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;msg-recv&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Dontwait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Result&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-recv&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;non-blocking-io&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Dontwait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Result&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;nn-recv&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;MSG_MAX_SIZE&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;non-blocking-io&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Dontwait&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;unless&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;exit-with-error-maybe&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Dontwait&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Result&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Sock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
       &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;pack&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;mapcar&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;head&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;car&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cdr&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;Result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;The first thing you’ll notice is this crazy argument sent to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nn-recv&lt;/code&gt;. It’s something we saw earlier: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;'(8192 B . 8192)&lt;/code&gt;. The reason we use the &lt;a href=&quot;http://software-lab.de/doc/refB.html#bool&quot;&gt;backtick&lt;/a&gt; (backquote) is to immediately evaluate the expression. You’ll notice the list is quoted with a &lt;a href=&quot;http://software-lab.de/doc/refQ.html#quote&quot;&gt;single quote&lt;/a&gt; for an unevaluated expression, but in fact we want to evaluate that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MSG_MAX_SIZE&lt;/code&gt; constant right away (turn it into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8192&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;The first thing you’ll notice is this crazy argument sent to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nn-recv&lt;/code&gt;. It’s something we saw earlier: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&apos;(8192 B . 8192)&lt;/code&gt;. The reason we use the &lt;a href=&quot;http://software-lab.de/doc/refB.html#bool&quot;&gt;backtick&lt;/a&gt; (backquote) is to immediately evaluate the expression. You’ll notice the list is quoted with a &lt;a href=&quot;http://software-lab.de/doc/refQ.html#quote&quot;&gt;single quote&lt;/a&gt; for an unevaluated expression, but in fact we want to evaluate that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MSG_MAX_SIZE&lt;/code&gt; constant right away (turn it into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;8192&lt;/code&gt;).&lt;/p&gt;
 
 &lt;p&gt;The next line will essentially exit the application depending on the result of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nn-recv&lt;/code&gt; call and the value of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Dontwait&lt;/code&gt; variable.&lt;/p&gt;
 
