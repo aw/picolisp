@@ -49,6 +49,10 @@
           crystal
         </a></li>
       
+        <li><a href="https://picolisp.a1w.ca/2024/06/17/sqlite/">
+          sqlite3
+        </a></li>
+      
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
         </a></li>
@@ -118,80 +122,123 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2020/09/16/posixmq/">
-        POSIX Message Queues library for PicoLisp
+      <a href="https://picolisp.a1w.ca/2020/10/29/rust/">
+        PicoLisp FFI with Rust
       </a>
     </h1>
 
-    <span class="post-date">16 Sep 2020</span>
+    <span class="post-date">29 Oct 2020</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-posixmq">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-rust">get it on GitHub</a>.</p>
 
-<p><em><a href="https://man7.org/linux/man-pages/man7/mq_overview.7.html">POSIX Message Queues</a></em> provide a dependency-free mechanism for processes to exchange data in the form of messages.</p>
-
-<p>This library makes it simple to embed support for <em>POSIX Message Queues</em> in <a href="https://picolisp.com">PicoLisp</a> applications running on Linux.</p>
-
-<ol>
-  <li><a href="#requirements">Requirements</a></li>
-  <li><a href="#getting-started">Getting Started</a></li>
-  <li><a href="#quick-start">Quick Start</a></li>
-  <li><a href="#documentation">Documentation</a></li>
-</ol>
+<p>This repo provides a simple example of how to use <a href="https://software-lab.de/down.html">PicoLisp</a> with <a href="https://www.rust-lang.org/tools/install">Rust</a> using PicoLisp’s FFI <code class="language-plaintext highlighter-rouge">(native)</code> functionality.</p>
 
 <h1 id="requirements">Requirements</h1>
 
 <ul>
-  <li>PicoLisp <strong>64-bit</strong> <code class="language-plaintext highlighter-rouge">v17.12</code> to <code class="language-plaintext highlighter-rouge">v20.7.16</code>, or <code class="language-plaintext highlighter-rouge">pil21</code></li>
-  <li>Linux with kernel <code class="language-plaintext highlighter-rouge">v3.5+</code></li>
-  <li>Kernel <em>POSIX Message Queues</em> support</li>
-  <li>POSIX Realtime Extensions library (<strong>librt.so</strong>)</li>
+  <li>Rustc and Cargo <code class="language-plaintext highlighter-rouge">v1.47.0+</code></li>
+  <li>PicoLisp 64-bit <code class="language-plaintext highlighter-rouge">v17.12+</code> or <code class="language-plaintext highlighter-rouge">pil21</code></li>
 </ul>
 
-<h1 id="getting-started">Getting Started</h1>
+<h1 id="getting-started">Getting started</h1>
 
-<p>The first step is to run the unit tests: <code class="language-plaintext highlighter-rouge">make check</code></p>
+<p>Once you’ve setup <em>PicoLisp</em> and <em>Rust</em>, simply type <code class="language-plaintext highlighter-rouge">make</code> to build and test the shared library.</p>
 
-<p>If those fail, jump to the <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a> section to perform the initial setup and and system check.</p>
+<h1 id="output">Output</h1>
 
-<p>If all works well, then your system is ready to use this library.</p>
+<p>Before I explain what’s going on, here’s what the output should look like:</p>
 
-<h1 id="quick-start">Quick Start</h1>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Received struct: PilStruct {
+    byte1: 32,
+    byte2: 33,
+    character1: 67,
+    character2: 68,
+    int: -1,
+    long: 1,
+    string: 0x4847464544434241,
+    array: [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+    ],
+}
+Result code: 0
+Extracted struct:
+(de Extracted (42 43)
+   ("A" "B")
+   65535
+   9223372036854775807
+   "pilrust"
+   (80 105 99 111 76 105 115 112) )
+</code></pre></div></div>
 
-<p>The code below illustrates how to use the queue for sending and receiving a message.</p>
+<h1 id="explain">Explain</h1>
 
-<h4 id="example-code">Example Code</h4>
+<p>The code can be found in <a href="extract.l">extract.l</a> and <a href="src/lib.rs">src/lib.rs</a>. The <em>Rust</em> code is designed as a <strong>shared library</strong> and can be called by PicoLisp’s <strong>(native)</strong> function to pass data to/from between both languages.</p>
 
-<pre><code class="language-picolisp">(load "mqueue.l")                               # load the library
-(let Fd (pmq-open "/myQ" (list O_RDWR O_CREAT)) # create a read/write queue named "/myQ"
-  (pmq-send Fd "Hello World")                   # send the message "Hello World"
-  (pmq-receive Fd)                              # receive the message
-  (pmq-close Fd)                                # close the queue
-  (pmq-unlink "/myQ") )                         # remove the queue
-</code></pre>
+<h2 id="picolisp-code-explanation">PicoLisp code explanation</h2>
 
-<h4 id="example-output">Example Output</h4>
+<p>First, the code allocates 32 bytes of memory, which will be used to store data in a <a href="https://software-lab.de/doc/refS.html#struct">struct</a>.</p>
 
-<p><strong>Note:</strong> Verbose output is enabled by default and can be disabled with <code class="language-plaintext highlighter-rouge">(off *PMQ_verbose)</code>.</p>
-
-<pre><code class="language-none">[2020-09-17T03:37:15] Opened queue: Name='/myqueue', FD=3
-[2020-09-17T03:37:15] Send: String='Hello World', Priority=0, FD=3
-[2020-09-17T03:37:15] Get attributes: Flags=0, Maxmsg=10, Msgsize=8192, Curmsgs=1, FD=3
-[2020-09-17T03:37:15] Receive: String='Hello World' (12 Bytes), FD=3
-[2020-09-17T03:37:15] Closed queue: FD=3
-[2020-09-17T03:37:15] Unlinked queue: Name='/myqueue'
--&gt; 0
-</code></pre>
-
-<h1 id="documentation">Documentation</h1>
-
-<p>Additional usage and reference documentation can be found in <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/">docs/</a></p>
+<p>It then creates a struct named <code class="language-plaintext highlighter-rouge">P</code> with the following specification:</p>
 
 <ul>
-  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a>: some guides <strong>for beginners</strong> to get started using this library</li>
-  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/HOWTO.md">HOWTO</a>: a set of recipes for performing more advanced tasks with this library</li>
-  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/EXPLAIN.md">EXPLAIN</a>: an explanation of some key concepts, including how this library works</li>
-  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/REFERENCE.md">REFERENCE</a>: technical information on the internals of this library</li>
+  <li>2 arbitrary bytes</li>
+  <li>2-bytes containing valid UTF-8 characters</li>
+  <li>1x 32-bit (4 bytes) signed integer</li>
+  <li>1x 64-bit (8 bytes) signed long</li>
+  <li>1x 8-byte null-terminated string</li>
+  <li>1x 8-byte arbitrary bytes array</li>
 </ul>
+
+<p>Then the following <a href="https://software-lab.de/doc/refN.html#native">native</a> call is made and its result is stored in the <code class="language-plaintext highlighter-rouge">Res</code> variable:</p>
+
+<pre><code class="language-picolisp">(native "target/debug/libpilrust.so" "extract" 'I P)
+</code></pre>
+
+<p>This calls the <code class="language-plaintext highlighter-rouge">extract</code> function from the <em>Rust</em> library, with the <code class="language-plaintext highlighter-rouge">P</code> struct as its only parameter. It expects a 32-bit signed integer <code class="language-plaintext highlighter-rouge">I</code> as the return value (it will be either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">-1</code>).</p>
+
+<p>Next, the code will extract the <code class="language-plaintext highlighter-rouge">P</code> structure using the specification described above:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(struct P '((B . 2) (C . 2) I N S (B . 8)))
+</code></pre></div></div>
+
+<p>Finally, the code will free the previously allocated memory and print the result of the <code class="language-plaintext highlighter-rouge">P</code> structure.</p>
+
+<p>Some tests run at the end to ensure the data received from <em>Rust</em> is what we expected.</p>
+
+<h3 id="note">Note</h3>
+
+<ul>
+  <li>The values sent to the <em>Rust</em> library will be printed by <em>Rust</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code>.</li>
+  <li>The values received from the <em>Rust</em> library will be printed by <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Extracted struct:</code>.</li>
+</ul>
+
+<h2 id="rust-code-explanation">Rust code explanation</h2>
+
+<p>The <em>Rust</em> code defines the struct for the received data; it is named <code class="language-plaintext highlighter-rouge">PilStruct</code> and contains the exact same specification as the <code class="language-plaintext highlighter-rouge">P</code> struct in the <em>PicoLisp code explanation</em>.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">extract()</code> function creates a new struct in the variable <code class="language-plaintext highlighter-rouge">newstruct</code> which contains some new values, different from what was received by <em>PicoLisp</em>.</p>
+
+<p>Since FFI is considered <a href="https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html">unsafe in <em>Rust</em></a>, the code which actually does the FFI (dereferencing the pointer and writing to it) is contained in an <code class="language-plaintext highlighter-rouge">unsafe</code> block:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>unsafe { ... playing with fire ... }
+</code></pre></div></div>
+
+<p>Luckily, the <em>Rust</em> function checks if the struct is a <strong>null pointer</strong> before trying to work with it, and returns <code class="language-plaintext highlighter-rouge">-1</code> if it is. However it doesn’t check if it’s correctly aligned (it is), so look-out for that!</p>
+
+<p>The code then dereferences the pointer and prints what it received (the entire struct) from <em>PicoLisp</em> as <code class="language-plaintext highlighter-rouge">Received struct:</code> (mentioned earlier).</p>
+
+<p>Finally, it writes the <code class="language-plaintext highlighter-rouge">newstruct</code> struct to the pointer and returns <code class="language-plaintext highlighter-rouge">0</code>. <em>PicoLisp</em> can then read the return code and the new struct data.</p>
+
+<h1 id="thoughts">Thoughts</h1>
+
+<p>There isn’t much to this code, but I thought it would be fun to create a working FFI library that’s <em>not</em> written in <em>C</em> and which works perfectly with <em>PicoLisp</em>.</p>
 
   </div>
   

@@ -49,6 +49,10 @@
           crystal
         </a></li>
       
+        <li><a href="https://picolisp.a1w.ca/2024/06/17/sqlite/">
+          sqlite3
+        </a></li>
+      
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
         </a></li>
@@ -118,134 +122,237 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2017/02/27/semver/">
-        SemVer for PicoLisp
+      <a href="https://picolisp.a1w.ca/2018/05/11/json-v3/">
+        JSON Encoder/Decoder in pure PicoLisp
       </a>
     </h1>
 
-    <span class="post-date">27 Feb 2017</span>
+    <span class="post-date">11 May 2018</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-semver">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-json">get it on GitHub</a>.</p>
 
-<p>This library can validate and compare <strong>Major.Minor.Patch</strong> versions (ex: <code class="language-plaintext highlighter-rouge">"1.0.0"</code>).
-It ignores pre-release, build, metadata, and special extensions (ex: <code class="language-plaintext highlighter-rouge">.alpha.1</code>).</p>
+<p>This library can be used to parse and serialize (encode/decode) JSON strings in <a href="http://picolisp.com/">PicoLisp</a>.</p>
 
-<p><img src="https://cloud.githubusercontent.com/assets/153401/23364395/ceda769a-fcf6-11e6-9bf6-b7b0b8187f61.png" alt="SemVer PicoLisp test output" /></p>
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6571543/56e31e44-c701-11e4-99f0-c2c51fd8061b.png" alt="picolisp-json" /></p>
 
-<h1 id="requirements">Requirements</h1>
+<h1 id="explanation-json-encoderdecoder-in-pure-picolisp">Explanation: JSON Encoder/Decoder in pure PicoLisp</h1>
 
-<ul>
-  <li><a href="http://picolisp.com">PicoLisp</a> 32-bit or 64-bit v16.12+</li>
-</ul>
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-json.git">PicoLisp-JSON</a> encoder/decoder.</p>
 
-<h1 id="usage">Usage</h1>
+<p><strong>Note:</strong> This document covers <code class="language-plaintext highlighter-rouge">v3</code> of the JSON library. To view the older (C/ffi bindings) version <a href="https://github.com/aw/picolisp-json/blob/v2.2.0/EXPLAIN.md">click here</a>.</p>
 
-<ul>
-  <li>Include <code class="language-plaintext highlighter-rouge">semver.l</code> in your application: <code class="language-plaintext highlighter-rouge">(load "semver.l")</code></li>
-  <li>Use one of the 5 public functions listed below</li>
-</ul>
+<p>It’s split into a few sections for easier reading:</p>
 
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">Function</th>
-      <th style="text-align: left">Description</th>
-      <th style="text-align: left">Returns</th>
-      <th style="text-align: left">Example</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-format</code></td>
-      <td style="text-align: left">Formats a version string into a list of integers</td>
-      <td style="text-align: left">List of integers</td>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">(1 4 2)</code></td>
-    </tr>
-    <tr>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-cmp</code></td>
-      <td style="text-align: left">Compares two lists of integers</td>
-      <td style="text-align: left">List containing NIL, 0 or T</td>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">(NIL 0 T)</code></td>
-    </tr>
-    <tr>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-compare</code></td>
-      <td style="text-align: left">Compares two version strings</td>
-      <td style="text-align: left">NIL, 0, or T</td>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">NIL</code></td>
-    </tr>
-    <tr>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-compare-slow</code></td>
-      <td style="text-align: left">Compares two version strings using the spaceship <code class="language-plaintext highlighter-rouge">&lt;=&gt;</code></td>
-      <td style="text-align: left">NIL, 0, or T</td>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">T</code></td>
-    </tr>
-    <tr>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">semver-sort</code></td>
-      <td style="text-align: left">Sorts a list of version strings</td>
-      <td style="text-align: left">List of integers or strings</td>
-      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">((1 3 0) (1 4 0) (1 6 0))</code> or <code class="language-plaintext highlighter-rouge">("1.3.0" "1.4.0" "1.6.0")</code></td>
-    </tr>
-  </tbody>
-</table>
+<ol>
+  <li><a href="#global-variables">Global variables</a>: Important variables used throughout the library.</li>
+  <li><a href="#pure-picolisp-json-decoding">Pure PicoLisp JSON decoding</a>: Decoding JSON in PicoLisp, without external libraries.
+    <ul>
+      <li><a href="#handling-unicode-characters">Handling Unicode characters</a></li>
+      <li><a href="#stack--based-bracket-matching">Stack-based bracket matching</a></li>
+      <li><a href="#object-and-array-validation">Object and array validation</a></li>
+    </ul>
+  </li>
+  <li><a href="#internal-functions">Internal functions</a>: Recursion and datatype-checking.
+    <ul>
+      <li><a href="#decoding-json">decoding JSON</a></li>
+      <li><a href="#encoding-json">encoding JSON</a></li>
+    </ul>
+  </li>
+</ol>
 
-<p>Version comparison is always from left to right.</p>
+<p>Make sure you read the <a href="README.md">README</a> to get an idea of what this library does.</p>
 
-<p>A brief explanation of the result obtained from <code class="language-plaintext highlighter-rouge">semver-compare</code>:</p>
+<p>Also, I recommend you visit my <a href="https://picolisp.a1w.ca/">PicoLisp Libraries Page</a> for additional PicoLisp tips and ideas.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>if left &lt; right then return NIL # left is older
-if left = right then return  0 # left and right are the same
-if left &gt; right then return  T # left is newer
-</code></pre></div></div>
+<h1 id="global-variables">Global variables</h1>
 
-<h1 id="examples">Examples</h1>
+<p>Prior to <code class="language-plaintext highlighter-rouge">version 17.3.4</code>, PicoLisp provided the <a href="https://software-lab.de/doc/refL.html#local">local</a> function to prevent variables from leaking into the global namespace, however it was removed in the <code class="language-plaintext highlighter-rouge">32-bit</code> version, and its semantics were changed, thus introducing a breaking change for anyone using <code class="language-plaintext highlighter-rouge">(local)</code> in their code.</p>
 
-<h3 id="1-compare-two-version-strings">1. Compare two version strings</h3>
+<p>To work around this issue, I modified the library to <em>disable</em> namespaces by specifying the environment variable <code class="language-plaintext highlighter-rouge">PIL_NAMESPACES=false</code>.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+<pre><code class="language-picolisp">(unless (= "false" (sys "PIL_NAMESPACES"))
+  (symbols 'json 'pico)
 
-(semver-compare "1.4.0" "1.5.0")
--&gt; NIL
-(semver-compare "1.5.0" "1.5.0")
--&gt; 0
-(semver-compare "1.6.0" "1.5.0")
--&gt; T
-</code></pre></div></div>
+  (local MODULE_INFO *Msg err-throw)
+</code></pre>
 
-<h3 id="2-format-a-version-string-into-a-list-of-integers">2. Format a version string into a list of integers</h3>
+<p>This change allows the JSON library to be loaded correctly on all 32/64-bit systems using PicoLisp higher than <code class="language-plaintext highlighter-rouge">version 3.1.9</code> (for backwards compatibility), however if namespaces aren’t required, it’s probably best to <em>disable</em> namespaces as mentioned above.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+<h1 id="pure-picolisp-json-decoding">Pure PicoLisp JSON decoding</h1>
 
-(semver-format "1.4.0")
--&gt; (1 4 0)
-</code></pre></div></div>
+<p>In <code class="language-plaintext highlighter-rouge">v2</code>, an external <a href="https://github.com/kgabis/parson">C library</a> was used to perform JSON string decoding. This version gets rid of that dependency and performs all parsing directly in PicoLisp.</p>
 
-<h3 id="3-compare-two-lists-of-integers">3. Compare two lists of integers</h3>
+<h3 id="handling-unicode-characters">Handling Unicode characters</h3>
 
-<ul>
-  <li>The <code class="language-plaintext highlighter-rouge">(car)</code> corresponds to the <code class="language-plaintext highlighter-rouge">major</code></li>
-  <li>The <code class="language-plaintext highlighter-rouge">(cadr)</code> corresponds to the <code class="language-plaintext highlighter-rouge">minor</code></li>
-  <li>The <code class="language-plaintext highlighter-rouge">(caddr)</code> corresponds to the <code class="language-plaintext highlighter-rouge">patch</code></li>
-</ul>
+<p>The JSON spec requires proper handling of Unicode characters written as: <code class="language-plaintext highlighter-rouge">\uNNNN</code>, where <code class="language-plaintext highlighter-rouge">N</code> is a hexadecimal digit, as well formfeed <code class="language-plaintext highlighter-rouge">\f</code> and backspace <code class="language-plaintext highlighter-rouge">\b</code>, which are not handled by PicoLisp. However it does handle newline <code class="language-plaintext highlighter-rouge">\n -&gt; ^J</code>, carriage return <code class="language-plaintext highlighter-rouge">\r -&gt; ^M</code>, tab <code class="language-plaintext highlighter-rouge">\t -&gt; ^I</code>.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+<p>Similar to the <code class="language-plaintext highlighter-rouge">@lib/json.l</code> included with PicoLisp, this library calls <a href="https://software-lab.de/doc/refS.html#str">str</a> to tokenize the JSON string.</p>
 
-(semver-cmp (2 3 2) (1 4 2))
--&gt; (T NIL 0)
-(semver-cmp (1 5 0) (1 4 2))
--&gt; (0 T NIL)
-(semver-cmp (2 3 2) (1 4 2))
--&gt; (T NIL 0)
-</code></pre></div></div>
+<p>Unforunately, the tokenization removes the single <code class="language-plaintext highlighter-rouge">\</code> from Unicode characters, turning <code class="language-plaintext highlighter-rouge">\u006C</code> into <code class="language-plaintext highlighter-rouge">u006c</code>, rendering it impossible to safely differentiate it from a random string containg the <code class="language-plaintext highlighter-rouge">u006c</code> character sequence.</p>
 
-<h3 id="4-sort-a-list-of-version-strings">4. Sort a list of version strings</h3>
+<p>In that case, it’s necessary to parse the Unicode characters <em>before</em> tokenizing the string:</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(load "semver.l")
+<pre><code class="language-picolisp">(str (json-parse-unicode (chop Value)) "_")
+</code></pre>
 
-(semver-sort '("1.4.0" "1.6.0" "1.3.0"))
--&gt; ((1 3 0) (1 4 0) (1 6 0))
-(semver-sort '("1.4.0" "1.6.0" "1.3.0") T)
--&gt; ("1.3.0" "1.4.0" "1.6.0")
-</code></pre></div></div>
+<p>The <code class="language-plaintext highlighter-rouge">(json-parse-unicode)</code> function receives a <a href="https://software-lab.de/doc/refC.html#chop">chop(ped)</a> list of characters representing the full JSON string, and returns a <a href="https://software-lab.de/doc/refP.html#pack">pack(ed)</a> string with all <code class="language-plaintext highlighter-rouge">\uNNNN</code> values converted to their UTF-8 symbol:</p>
+
+<pre><code class="language-picolisp">[de json-parse-unicode (Value)
+  (pack
+    (make
+      (while Value
+        (let R (pop 'Value)
+          (cond
+            [(and (= "\\" R) (= "u" (car Value))) (let U (cut 5 'Value) (link (char (hex (pack (tail 4 U) ] # \uNNNN hex
+            [(and (= "\\" R) (= "b" (car Value))) (pop 'Value) (link (char (hex "08") ] # \b backspace
+            [(and (= "\\" R) (= "f" (car Value))) (pop 'Value) (link (char (hex "0C") ] # \f formfeed
+            (T (link R)) ]
+</code></pre>
+
+<p>Let’s see what’s going on here:</p>
+
+<ol>
+  <li><a href="https://software-lab.de/doc/refM.html#make">make</a> is used to initiate a new list</li>
+  <li><a href="https://software-lab.de/doc/refW.html#while">while</a> loops over the list stored in <code class="language-plaintext highlighter-rouge">Value</code>, until the list is empty</li>
+  <li><a href="https://software-lab.de/doc/refP.html#pop">pop</a> removes the first element from the list stored in <code class="language-plaintext highlighter-rouge">Value</code></li>
+  <li>A conditional check since we’re searching for a <code class="language-plaintext highlighter-rouge">\b</code> (backspace), <code class="language-plaintext highlighter-rouge">\f</code> (formfeed), or <code class="language-plaintext highlighter-rouge">\uNNNN</code> (Unicode) character</li>
+  <li>If the character following <code class="language-plaintext highlighter-rouge">\\</code> (it’s escaped <code class="language-plaintext highlighter-rouge">\</code>) is <code class="language-plaintext highlighter-rouge">u</code>, then we pop the next 5 items from the list (i.e: <code class="language-plaintext highlighter-rouge">uNNNN</code>) using <a href="https://software-lab.de/doc/refC.html#cut">cut</a></li>
+  <li><a href="https://software-lab.de/doc/refL.html#link">link</a> is used to add a new list to the list created with <code class="language-plaintext highlighter-rouge">(make)</code></li>
+  <li>Finally, we pack the last 4 items from the previously cut items (i.e: <code class="language-plaintext highlighter-rouge">NNNN</code>), and use <a href="https://software-lab.de/doc/refH.html#hex">hex</a> and <a href="https://software-lab.de/doc/refC.html#char">char</a> to convert <code class="language-plaintext highlighter-rouge">NNNN</code>.</li>
+</ol>
+
+<p>For Unicode characters, it ends up like this: <code class="language-plaintext highlighter-rouge">"\\u0065" -&gt; "e"</code>. Yay!</p>
+
+<h3 id="stack-based-bracket-matching">Stack-based bracket matching</h3>
+
+<p>There’s no point in decoding a JSON file that isn’t valid, so an early detection method is to determine whether all the curly braces (<code class="language-plaintext highlighter-rouge">{}</code>) and square brackets (<code class="language-plaintext highlighter-rouge">[]</code>) are matched.</p>
+
+<p>We’ll use a stack-based algorithm to count brackets, and only consider it a success if the stack is empty at the end.</p>
+
+<p>First, we provide the tokenized string to the <code class="language-plaintext highlighter-rouge">(json-count-brackets)</code> function, and map over each character. For each character, we perform the following:</p>
+
+<pre><code class="language-picolisp">(if (or (= "{" N) (= "[" N))
+    (push 'Json_stack N)
+    (case N
+      ("]" (let R (pop 'Json_stack) (unless (= "[" R) (err-throw "Unmatched JSON brackets '['"))))
+      ("}" (let R (pop 'Json_stack) (unless (= "{" R) (err-throw "Unmatched JSON brackets '{'")))) ) ) )
+</code></pre>
+
+<ol>
+  <li>If the character is an opening <code class="language-plaintext highlighter-rouge">{</code> or <code class="language-plaintext highlighter-rouge">[</code>, <a href="https://software-lab.de/doc/refP.html#push">push</a> it to the stack</li>
+  <li>If the character is a closing <code class="language-plaintext highlighter-rouge">}</code> or <code class="language-plaintext highlighter-rouge">]</code>, <a href="https://software-lab.de/doc/refP.html#pop">pop</a> the next value from the stack, and if that character isn’t the matching bracket (i.e: <code class="language-plaintext highlighter-rouge">{</code> for <code class="language-plaintext highlighter-rouge">}</code>, or <code class="language-plaintext highlighter-rouge">[</code> for <code class="language-plaintext highlighter-rouge">]</code>), then we have unmatched JSON brackets. Easy.</li>
+</ol>
+
+<p>Those who are paying attention will notice the <code class="language-plaintext highlighter-rouge">(err-throw)</code> function. It does two things:</p>
+
+<pre><code class="language-picolisp">(msg Error)
+(throw 'invalid-json NIL)
+</code></pre>
+
+<p>The <a href="https://software-lab.de/doc/refM.html#msg">msg</a> function will output a message to STDERR, because the <a href="https://en.wikipedia.org/wiki/Unix_philosophy#Mike_Gancarz:_The_UNIX_Philosophy">UNIX Philosophy</a>.</p>
+
+<p>The <a href="https://software-lab.de/doc/refT.html#throw">throw</a> function will raise an error in the program, with the <code class="language-plaintext highlighter-rouge">'invalid-json</code> label and a <code class="language-plaintext highlighter-rouge">NIL</code> return value.</p>
+
+<p>The decoder will <a href="https://software-lab.de/doc/refC.html#catch">catch</a> the raised error, as it should, but more importantly, the <code class="language-plaintext highlighter-rouge">NIL</code> return value will indicate that decoding failed. This is important for programs which embed this library, as it won’t break a running program, and will behave exactly as expected when <em>something goes wrong</em>.</p>
+
+<h3 id="object-and-array-validation">Object and array validation</h3>
+
+<p>We’ll briefly cover the validation for objects, arrays, and the separator.</p>
+
+<p>Essentially, <code class="language-plaintext highlighter-rouge">(json-array-check)</code>, <code class="language-plaintext highlighter-rouge">(json-object-check)</code> simply validate whether the value following the <code class="language-plaintext highlighter-rouge">{</code> or <code class="language-plaintext highlighter-rouge">[</code> brackets are allowed.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">(json-object-check-separator)</code> is used to ensure a <code class="language-plaintext highlighter-rouge">:</code> separates the string from the value (ex: <code class="language-plaintext highlighter-rouge">{"string" : value}</code>).</p>
+
+<pre><code class="language-picolisp">[de json-object-check (Name)
+  (or
+    (lst? Name)
+    (= "}" Name)
+    (err-throw (text "Invalid Object name '@1', must be '}' OR string", Name) ]
+</code></pre>
+
+<p>As you can see, it’s quite simple, and if there’s no match, <code class="language-plaintext highlighter-rouge">(err-throw)</code> will be called.</p>
+
+<h1 id="internal-functions">Internal functions</h1>
+
+<p>This part of the code was completely rewritten from scratch, so we’ll go through it together.</p>
+
+<h2 id="decoding-json">decoding JSON</h2>
+
+<p>We’ll begin by looking at how JSON is decoded in this library.</p>
+
+<h3 id="iterate-object">(iterate-object)</h3>
+
+<p>A fully tokenized JSON string might look like this:</p>
+
+<pre><code class="language-picolisp">("{" ("t" "e" "s" "t") ":" "[" 1 "," 2 "," 3 "]" "}")
+</code></pre>
+
+<p>Now, look at the <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function. This is a recursive function which loops and iterates through the global <code class="language-plaintext highlighter-rouge">*Json</code> variable, a list which contains the tokenized JSON string, and then quickly builds a sexy PicoLisp list.</p>
+
+<pre><code class="language-picolisp">[de iterate-object ()
+  (let Type (pop '*Json)
+    (cond
+      ((= "[" Type)     (make (link-array T)))
+      ((= "{" Type)     (make (link-object)))
+      ((lst? Type)      (pack Type))
+      ((num? Type)      Type)
+      ((= "-" Type)     (if (num? (car *Json)) (format (pack "-" (pop '*Json))) (iterate-object)))
+      ((= 'true Type)   'true)
+      ((= 'false Type)  'false)
+      ((= 'null Type)   'null)
+      (T                (err-throw (text "Invalid Object '@1', must be '[' OR '{' OR string OR number OR true OR false OR null", Type) ]
+</code></pre>
+
+<p>We treat the <code class="language-plaintext highlighter-rouge">*Json</code> list as a stack, and iterate through it after popping one or more elements, until there’s nothing left but tears of joy.</p>
+
+<p>The condition for <code class="language-plaintext highlighter-rouge">[</code> will start a new list with <a href="https://software-lab.de/doc/refM.html#make">make</a>, and call <code class="language-plaintext highlighter-rouge">(link-array)</code> with the argument <code class="language-plaintext highlighter-rouge">T</code>. We’ll see why later.</p>
+
+<p>The rest is quite easy to understand, but I’ll focus on the case of <code class="language-plaintext highlighter-rouge">(= "-" Type)</code>. The tokenization doesn’t recognize negative numbers, so <code class="language-plaintext highlighter-rouge">-32</code> would be tokenized to <code class="language-plaintext highlighter-rouge">'("-" 32)</code>. To solve this, we check for a single <code class="language-plaintext highlighter-rouge">"-"</code>, and if the next item in the list is a number, then we <a href="https://software-lab.de/doc/refP.html#pop">pop</a> the <code class="language-plaintext highlighter-rouge">"-"</code>, <a href="https://software-lab.de/doc/refP.html#pack">pack</a> it with the number (<code class="language-plaintext highlighter-rouge">(pack)</code> creates a string), then use <a href="https://software-lab.de/doc/refF.html#format">format</a> to convert it to a number.
+In other words, our tokenized <code class="language-plaintext highlighter-rouge">'("-" 23) -&gt; -23</code>. Please note, since <code class="language-plaintext highlighter-rouge">-23</code> is not a string, this could not have been done in the Unicode parsing stage. It must occur after tokenization with <code class="language-plaintext highlighter-rouge">(str)</code>.</p>
+
+<h3 id="link-array-and-link-object">(link-array) and (link-object)</h3>
+
+<p>Both the <code class="language-plaintext highlighter-rouge">(link-array)</code> and <code class="language-plaintext highlighter-rouge">(link-object)</code> function make a call to the more generic <code class="language-plaintext highlighter-rouge">(link-generic)</code> function. It accepts three arguments: the type of item, the closing bracket, and an unevaluated <a href="https://software-lab.de/doc/refQ.html#quote">quote(ed)</a> function.</p>
+
+<pre><code class="language-picolisp">(link-generic "array"
+                "]"
+                '(link (iterate-object))
+(link-generic "object"
+                "}"
+                '(link-object-value Name) ]
+</code></pre>
+
+<p>They’re quite similar. In both cases, the function will iterate once more over the object, depending on various conditions described in <code class="language-plaintext highlighter-rouge">(link-generic)</code>.</p>
+
+<p>Let’s look at some of the magic going on in <code class="language-plaintext highlighter-rouge">(link-generic)</code>:</p>
+
+<pre><code class="language-picolisp"># 1. ((any (pack "json-" Type "-check")) Name)
+# 2. (unless (= Bracket Name) (eval Iterator))
+</code></pre>
+
+<p>The first looks a bit weird, but it essentially uses <a href="https://software-lab.de/doc/refA.html#any">any</a> and <a href="https://software-lab.de/doc/refP.html#pack">pack</a> to dynamically generate a function name, and then calls it with the <code class="language-plaintext highlighter-rouge">Name</code> argument.</p>
+
+<p>This gives something like: <code class="language-plaintext highlighter-rouge">(json-array-check "[")</code> - dynamically generate Lisp functions ftw!</p>
+
+<p>The second is a bit easier to grok, where it simply <a href="https://software-lab.de/doc/refE.html#eval">eval(uates)</a> the given function passed as through the variable <code class="language-plaintext highlighter-rouge">Iterator</code>.</p>
+
+<h3 id="t">T</h3>
+
+<p>Earlier, we saw <code class="language-plaintext highlighter-rouge">(link-array T)</code> was called, but sometimes, only <code class="language-plaintext highlighter-rouge">(link-array)</code> is called, without the <code class="language-plaintext highlighter-rouge">T</code> argument. Why?</p>
+
+<p>To differentiate an <code class="language-plaintext highlighter-rouge">Array</code> from an <code class="language-plaintext highlighter-rouge">Object</code> in PicoLisp, we append <code class="language-plaintext highlighter-rouge">T</code> to the start of the list. When recursing, unless it’s a new array, we don’t provide the <code class="language-plaintext highlighter-rouge">T</code> argument:</p>
+
+<pre><code class="language-picolisp">(when Make (link T))
+</code></pre>
+
+<p>The previously tokenized JSON string would end up like this:</p>
+
+<pre><code class="language-picolisp">(("test" T 1 2 3))
+</code></pre>
+
+<h2 id="encoding-json">encoding JSON</h2>
+
+<p>The code for encoding JSON strings hasn’t changed, so feel free to <a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md#encoding-json">read about it here</a>.</p>
 
   </div>
   

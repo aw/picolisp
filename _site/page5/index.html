@@ -49,6 +49,10 @@
           crystal
         </a></li>
       
+        <li><a href="https://picolisp.a1w.ca/2024/06/17/sqlite/">
+          sqlite3
+        </a></li>
+      
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
         </a></li>
@@ -118,120 +122,80 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2020/06/18/supervisor/">
-        Unicorn-inspired PicoLisp daemon to spawn and manage worker processes
+      <a href="https://picolisp.a1w.ca/2020/09/16/posixmq/">
+        POSIX Message Queues library for PicoLisp
       </a>
     </h1>
 
-    <span class="post-date">18 Jun 2020</span>
+    <span class="post-date">16 Sep 2020</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-supervisor">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-posixmq">get it on GitHub</a>.</p>
 
-<p>This program mimics functionality of <a href="https://yhbt.net/unicorn/">Unicorn</a>, without being limited to HTTP applications.</p>
+<p><em><a href="https://man7.org/linux/man-pages/man7/mq_overview.7.html">POSIX Message Queues</a></em> provide a dependency-free mechanism for processes to exchange data in the form of messages.</p>
 
-<p>The included <code class="language-plaintext highlighter-rouge">supervisor.l</code> can be used to spawn multiple <em>worker</em> processes which perform tasks in an infinite loop.</p>
-
-<p><img src="https://user-images.githubusercontent.com/153401/85007713-68f87b80-b14b-11ea-840e-aed11b992a72.png" alt="Supervisor" /></p>
+<p>This library makes it simple to embed support for <em>POSIX Message Queues</em> in <a href="https://picolisp.com">PicoLisp</a> applications running on Linux.</p>
 
 <ol>
   <li><a href="#requirements">Requirements</a></li>
   <li><a href="#getting-started">Getting Started</a></li>
-  <li><a href="#usage">Usage</a></li>
-  <li><a href="#notes-and-limitations">Note and Limitations</a></li>
+  <li><a href="#quick-start">Quick Start</a></li>
+  <li><a href="#documentation">Documentation</a></li>
 </ol>
 
 <h1 id="requirements">Requirements</h1>
 
 <ul>
-  <li>PicoLisp 32-bit/64-bit <code class="language-plaintext highlighter-rouge">v17.12</code> to <code class="language-plaintext highlighter-rouge">v20.6.29</code></li>
-  <li>Linux or UNIX-like OS</li>
+  <li>PicoLisp <strong>64-bit</strong> <code class="language-plaintext highlighter-rouge">v17.12</code> to <code class="language-plaintext highlighter-rouge">v20.7.16</code>, or <code class="language-plaintext highlighter-rouge">pil21</code></li>
+  <li>Linux with kernel <code class="language-plaintext highlighter-rouge">v3.5+</code></li>
+  <li>Kernel <em>POSIX Message Queues</em> support</li>
+  <li>POSIX Realtime Extensions library (<strong>librt.so</strong>)</li>
 </ul>
 
 <h1 id="getting-started">Getting Started</h1>
 
-<p>This library is written in pure PicoLisp and contains <strong>no external dependencies</strong>.</p>
+<p>The first step is to run the unit tests: <code class="language-plaintext highlighter-rouge">make check</code></p>
 
-<p>To ensure everything works on your system, run the tests first: <code class="language-plaintext highlighter-rouge">make check</code></p>
+<p>If those fail, jump to the <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a> section to perform the initial setup and and system check.</p>
 
-<h3 id="try-the-test-app">Try the test app</h3>
+<p>If all works well, then your system is ready to use this library.</p>
 
-<p>Launch the Supervisor with: <code class="language-plaintext highlighter-rouge">./supervisor.l --app testapp.l</code></p>
+<h1 id="quick-start">Quick Start</h1>
 
-<p>You’ll see output showing 1 worker <em>“Performing a task”</em> in a loop. Wait until it completes a task or two, then press <code class="language-plaintext highlighter-rouge">Ctrl+C</code> or send an <code class="language-plaintext highlighter-rouge">INT</code> signal to tell the parent process to exit, along with its worker.</p>
+<p>The code below illustrates how to use the queue for sending and receiving a message.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># example output
-./supervisor.l --app testapp.l --workers 2
-parent process ready pid=814
-spawning 2 missing workers:
-worker[0] spawning..
-worker[1] spawning..
-worker[0] spawned pid=815
-worker[0] pid=815 do this after forking
-worker[0] ready
-worker[0] pid=815 Performing a task: sleeping for 12 seconds
-worker[1] spawned pid=816
-worker[1] pid=816 do this after forking
-worker[1] ready
-worker[1] pid=816 Performing a task: sleeping for 9 seconds
-worker[1] pid=816 Performing a task: sleeping for 16 seconds
-^Cworker[1] exited
-worker[0] exited
-parent exited
-</code></pre></div></div>
+<h4 id="example-code">Example Code</h4>
 
-<p>Feel free to observe the example code in <a href="testapp.l">testapp.l</a>.</p>
+<pre><code class="language-picolisp">(load "mqueue.l")                               # load the library
+(let Fd (pmq-open "/myQ" (list O_RDWR O_CREAT)) # create a read/write queue named "/myQ"
+  (pmq-send Fd "Hello World")                   # send the message "Hello World"
+  (pmq-receive Fd)                              # receive the message
+  (pmq-close Fd)                                # close the queue
+  (pmq-unlink "/myQ") )                         # remove the queue
+</code></pre>
 
-<h1 id="usage">Usage</h1>
+<h4 id="example-output">Example Output</h4>
 
-<p>The supervisor runs in the foreground and simply manages the worker processes. If a worker (child process) exits, it will be re-spawned automatically by the supervisor. The supervisor periodically checks for missing workers, depending on the <code class="language-plaintext highlighter-rouge">*SV_POLL_TIMEOUT</code> variable.</p>
+<p><strong>Note:</strong> Verbose output is enabled by default and can be disabled with <code class="language-plaintext highlighter-rouge">(off *PMQ_verbose)</code>.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># supervisor.l
-Usage:                    ./supervisor.l --app &lt;yourapp&gt; [option] [arguments]
+<pre><code class="language-none">[2020-09-17T03:37:15] Opened queue: Name='/myqueue', FD=3
+[2020-09-17T03:37:15] Send: String='Hello World', Priority=0, FD=3
+[2020-09-17T03:37:15] Get attributes: Flags=0, Maxmsg=10, Msgsize=8192, Curmsgs=1, FD=3
+[2020-09-17T03:37:15] Receive: String='Hello World' (12 Bytes), FD=3
+[2020-09-17T03:37:15] Closed queue: FD=3
+[2020-09-17T03:37:15] Unlinked queue: Name='/myqueue'
+-&gt; 0
+</code></pre>
 
-Example:                  ./supervisor.l --app app.l --workers 4 --poll 1
+<h1 id="documentation">Documentation</h1>
 
-Options:
---help                    show this help message and exit
-
---app &lt;yourapp&gt;           Filename of the app which contains (worker-start)
---poll &lt;seconds&gt;          Number of seconds to poll for missing workers (default: 30)
---preload                 Load the app in the parent before forking the worker process (default: No)
---workers &lt;number&gt;        Number of workers to spawn (default: 1)
-</code></pre></div></div>
-
-<h2 id="options">Options</h2>
+<p>Additional usage and reference documentation can be found in <a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/">docs/</a></p>
 
 <ul>
-  <li><code class="language-plaintext highlighter-rouge">--app</code>: This option accepts 1 argument, a PicoLisp <code class="language-plaintext highlighter-rouge">.l</code> file. It will be <code class="language-plaintext highlighter-rouge">(load)</code>ed in the forked process of each worker (each time a worker is spawned), unless <code class="language-plaintext highlighter-rouge">--preload</code> is specified. Once the process is forked, the <code class="language-plaintext highlighter-rouge">(worker-start)</code> function will be called automatically, so that needs to be defined in your worker app.</li>
-  <li><code class="language-plaintext highlighter-rouge">--preload</code>: This options takes no arguments. If <code class="language-plaintext highlighter-rouge">--preload</code> is specified, the worker app will be loaded only once, in the parent process. Its code will be inherited by each worker process as it’s spawned. This should be more memory efficient (and faster) for large applications, but prevents changing the worker app “on the fly” (without restarting the supervisor).</li>
-  <li><code class="language-plaintext highlighter-rouge">--poll</code>: This option accepts 1 argument, the number of seconds where the <code class="language-plaintext highlighter-rouge">parent</code> process will sleep before checking for any missing workers. For processes which take a long time to complete, or for non-busy servers, it’s probably safe to set the polling interval a bit higher (ex: <code class="language-plaintext highlighter-rouge">60</code> seconds). If there’s a need to know almost “right away” when a worker is missing, it is safe to set it to <code class="language-plaintext highlighter-rouge">1</code>.</li>
-  <li><code class="language-plaintext highlighter-rouge">--workers</code>: This option accepts 1 argument, the number of workers which should be spawned. The supervisor will remember this number and always ensure that it’s maintained. If 3 or 4 workers happen to exit, the supervisor will notice and respawn 3 workers.</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/TUTORIALS.md">TUTORIALS</a>: some guides <strong>for beginners</strong> to get started using this library</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/HOWTO.md">HOWTO</a>: a set of recipes for performing more advanced tasks with this library</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/EXPLAIN.md">EXPLAIN</a>: an explanation of some key concepts, including how this library works</li>
+  <li><a href="https://github.com/aw/picolisp-posixmq/blob/master/docs/REFERENCE.md">REFERENCE</a>: technical information on the internals of this library</li>
 </ul>
-
-<h1 id="notes-and-limitations">Notes and limitations</h1>
-
-<p>This section will explain some important technical details about the code, and limitations on what this app can and can’t do.</p>
-
-<h2 id="technical-notes">Technical notes</h2>
-
-<ul>
-  <li>All global variables are prefixed with <code class="language-plaintext highlighter-rouge">*SV_</code>, and functions are prefixed with <code class="language-plaintext highlighter-rouge">sv-</code>.</li>
-  <li>Similar to <a href="https://yhbt.net/unicorn/">Unicorn</a>, there are <code class="language-plaintext highlighter-rouge">(before-fork)</code> and <code class="language-plaintext highlighter-rouge">(after-fork)</code> hooks which will be called if they’re defined in your app (totally optional). Of course, <code class="language-plaintext highlighter-rouge">(before-fork)</code> happens in the parent process, right before the child is forked, and <code class="language-plaintext highlighter-rouge">(after-fork)</code> happens in the child process, right after it’s forked.</li>
-  <li>The <code class="language-plaintext highlighter-rouge">(before-fork)</code> hook will only be called when <code class="language-plaintext highlighter-rouge">--preload</code> is provided, since there’s no way to call the function before the code is even loaded.</li>
-  <li>The unique sequential ID <em>number</em> of the worker process will be sent as the one and only argument to <code class="language-plaintext highlighter-rouge">(before-fork)</code> and <code class="language-plaintext highlighter-rouge">(after-fork)</code>. This can be used in the app to conditionally perform tasks based on its ID (ex: worker ID 0 could verify the integrity of a database, while the other workers simply query it).</li>
-  <li>The supervisor is quite verbose, but this is necessary to see the status of what the workers are doing. Standard *NIX tools can be used to redirect output to a log file or <code class="language-plaintext highlighter-rouge">/dev/null</code> if needed.</li>
-  <li>Every time a worker loops on a task, it checks if the parent is still there. If not, it will exit cleanly on its own. This allows the parent to be stopped with <code class="language-plaintext highlighter-rouge">kill -9</code> (or <code class="language-plaintext highlighter-rouge">kill -KILL</code>), and the workers will continue their work and exit cleanly when they’re done.</li>
-  <li>Sending a regular kill signal to the parent (ex: <code class="language-plaintext highlighter-rouge">kill -15</code> or <code class="language-plaintext highlighter-rouge">kill -TERM</code>) will terminate all workers and the parent immediately.</li>
-</ul>
-
-<h2 id="limitations">Limitations</h2>
-
-<ul>
-  <li>This program was used in production for over 4 years and has been tested extensively under various loads. However it was modified heavily for public release and may contain bugs. Please use at your own risk.</li>
-  <li>This program is not an <em>exact copy</em> of Unicorn, and differs in many areas. It is also missing many features of Unicorn such as extra signal handling and hot code-reloading. There is a plan to add those features in the future.</li>
-  <li>There are other ways to do something similar to <code class="language-plaintext highlighter-rouge">supervisor.l</code> in PicoLisp, feel free to use those techniques if you prefer.</li>
-</ul>
-
 
   </div>
   

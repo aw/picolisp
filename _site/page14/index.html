@@ -49,6 +49,10 @@
           crystal
         </a></li>
       
+        <li><a href="https://picolisp.a1w.ca/2024/06/17/sqlite/">
+          sqlite3
+        </a></li>
+      
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
         </a></li>
@@ -118,263 +122,427 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2015/03/08/json/">
-        JSON Encoder/Decoder for PicoLisp
+      <a href="https://picolisp.a1w.ca/2015/03/16/https/">
+        HTTP(S) client for PicoLisp
       </a>
     </h1>
 
-    <span class="post-date">08 Mar 2015</span>
+    <span class="post-date">16 Mar 2015</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-json">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-https">get it on GitHub</a>.</p>
 
-<p>This library can be used to parse and serialize (encode/decode) JSON strings in <a href="http://picolisp.com/">PicoLisp</a>.</p>
+<p>This library can be used to make HTTP and HTTPS requests in <a href="http://picolisp.com">PicoLisp</a>, with support for authentication.</p>
 
-<p><img src="https://cloud.githubusercontent.com/assets/153401/6571543/56e31e44-c701-11e4-99f0-c2c51fd8061b.png" alt="picolisp-json" /></p>
+<p><img src="https://cloud.githubusercontent.com/assets/153401/6665239/08fe38ee-cbcf-11e4-8289-603c985c1c0f.png" alt="picolisp-https" /></p>
 
-<h1 id="explanation-json-encoderdecoder-for-picolisp">Explanation: JSON Encoder/Decoder for PicoLisp</h1>
+<h1 id="explanation-https-client-for-picolisp">Explanation: HTTP(S) client for PicoLisp</h1>
 
-<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-json.git">PicoLisp-JSON</a> encoder/decoder.</p>
+<p>This document provides a short walkthrough of the source code for the <a href="https://github.com/aw/picolisp-https.git">PicoLisp-HTTPS</a> client.</p>
 
-<p>It’s split into a few sections for easier reading:</p>
+<p>I won’t cover concepts which were covered in previous source code explanations. You can read them here:</p>
+
+<ul>
+  <li><a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a></li>
+  <li><a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md">JSON Explanation</a></li>
+</ul>
+
+<p>This document is split into a few sections:</p>
 
 <ol>
-  <li><a href="#global-variables">Global variables</a>: Important variables used throughout the library.</li>
-  <li><a href="#native-calls-ffi-bindings">Native calls (ffi-bindings)</a>: The <code class="language-plaintext highlighter-rouge">Parson</code> native C library, and how it’s used.</li>
-  <li><a href="#internal-functions">Internal functions</a>: Recursion and datatype-checking.
+  <li><a href="#loading-and-initialization">Loading and initialization</a>: Loading files and performing initial work.</li>
+  <li><a href="#error-handling">Error handling</a>: An idiom for handling errors.</li>
+  <li><a href="#internal-functions">Internal functions</a>: Destructuring, native C callbacks, and memory management.
     <ul>
-      <li><a href="#decoding-json">decoding JSON</a></li>
-      <li><a href="#encoding-json">encoding JSON</a></li>
+      <li><a href="#making-https-requests">making HTTPS requests</a></li>
+      <li><a href="#parsing-https-responses">parsing HTTPS responses</a></li>
+      <li><a href="#cleaning-up-errors">cleaning up errors</a></li>
     </ul>
   </li>
 </ol>
 
 <p>Make sure you read the <a href="README.md">README</a> to get an idea of what this library does.</p>
 
-<p>Also, I recommend you read my <a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md">Nanomsg Explanation</a> for additional PicoLisp tips and ideas.</p>
+<h1 id="loading-and-initialization">Loading and initialization</h1>
 
-<h1 id="global-variables">Global variables</h1>
+<p>We’ve made some changes to how we load files across all libraries.</p>
 
-<p>PicoLisp does not prevent variables from leaking into the global namespace. In order to prevent that, you must use <a href="http://software-lab.de/doc/refL.html#local">local</a> and define exactly what should <em>not</em> affect the global namespace. This is important to avoid un-intended side-effects.</p>
+<h3 id="loading">Loading</h3>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">local</span> <span class="nv">MODULE_INFO</span> <span class="nv">*Json</span> <span class="nv">*JSONError</span> <span class="nv">*JSONNull</span><span class="p">)</span>
+<p><a href="http://picolisp.com">PicoLisp</a> loads files from the <em>current working directory</em> <a href="http://software-lab.de/doc/refP.html#pwd">pwd</a>, which is in relation to where you ran the command:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">alex@dev-box:~/picolisp-https$</span> <span class="nv">pil</span> <span class="nb">+</span>
+<span class="err">:</span> <span class="p">(</span><span class="nv">pwd</span><span class="p">)</span>
+<span class="nv">-&gt;</span> <span class="s">"/home/aw/picolisp-https"</span>
 </code></pre></div></div>
 
-<p>This will ensure the variables will not affect anything outside their current scope (namespace). It’s similar to <code class="language-plaintext highlighter-rouge">var Myvar;</code> in JavaScript.</p>
+<p>So far so good, but what happens when the file you load also loads a file in a different directory? Depending if the path is relative or absolute, you will not necessarily get what you want.</p>
 
-<p>A few global variables have been defined at the top of the file.</p>
+<p>To fix this, we use <a href="http://software-lab.de/doc/refF.html#file">file</a>:</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">setq</span>
-  <span class="nv">*Json</span>         <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"lib/libparson.so"</span><span class="p">)</span>
-  <span class="nv">*JSONError</span>    <span class="mi">-1</span>
-  <span class="nv">*JSONNull</span>     <span class="mi">1</span>
-  <span class="nv">*JSONString</span>   <span class="mi">2</span>
-  <span class="nv">*JSONNumber</span>   <span class="mi">3</span>
-  <span class="nv">*JSONObject</span>   <span class="mi">4</span>
-  <span class="nv">*JSONArray</span>    <span class="mi">5</span>
-  <span class="nv">*JSONBoolean</span>  <span class="mi">6</span>
-  <span class="nv">*JSONSuccess</span>  <span class="mi">0</span>
-  <span class="nv">*JSONFailure</span>  <span class="mi">-1</span> <span class="p">)</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">*Https</span>              <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"lib/libneon.so"</span><span class="p">)</span>
 </code></pre></div></div>
 
-<p>You’ll notice I’m following the <a href="http://software-lab.de/doc/ref.html#conv">PicoLisp Naming Conventions</a> this time.</p>
+<p>What this does is load the file <code class="language-plaintext highlighter-rouge">lib/libneon.so</code> relative to the file that’s loading it.</p>
 
-<p>The variables prefixed with <code class="language-plaintext highlighter-rouge">*JSON</code> were copied directly from <a href="https://github.com/kgabis/parson/blob/81c2fd0186cafb43c6b4c190b50bb3a4fef1827e/parson.h#L39-L54">Parson’s source code</a>:</p>
+<p>We use this technique further down as well:</p>
 
-<pre><code class="language-C">..
-enum json_value_type {
-    JSONError   = -1,
-    JSONNull    = 1,
-    JSONString  = 2,
-..
-</code></pre>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span> <span class="nv">ffi-bindings</span>
+<span class="p">(</span><span class="nb">load</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"ffi.l"</span><span class="p">))</span>
 
-<p>When working with a native C library in PicoLisp, it’s important to use the same (or very similar) symbol names to avoid confusion.</p>
-
-<h1 id="native-calls-ffi-bindings">Native calls (ffi-bindings)</h1>
-
-<p><a href="https://github.com/kgabis/parson/">Parson</a> is a very simple C library, with functions accepting zero to three arguments, and returning simple validated values and structures.</p>
-
-<p>Example:</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">json-type</span> <span class="p">(</span><span class="nv">json-parse-string</span> <span class="s">"{\"Hello\":\"World\"}"</span><span class="p">))</span>
-<span class="nv">-&gt;</span> <span class="mi">4</span>
+<span class="err">#</span> <span class="nv">internal</span>
+<span class="p">(</span><span class="nb">load</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">file</span><span class="p">))</span> <span class="s">"internal.l"</span><span class="p">))</span>
 </code></pre></div></div>
 
-<p>This returns <code class="language-plaintext highlighter-rouge">4</code> which is <code class="language-plaintext highlighter-rouge">*JSONObject</code> based on our variables defined earlier.</p>
+<p>Perhaps there should be a <code class="language-plaintext highlighter-rouge">(cwd)</code> primitive for that? ;)</p>
 
-<p>As we’ll see later, our <code class="language-plaintext highlighter-rouge">picolisp-json</code> library can make decisions on how to parse data based on these types of results.</p>
+<h3 id="initialization">Initialization</h3>
+
+<p>There is a concept of <code class="language-plaintext highlighter-rouge">constructors</code> in PicoLisp, but it’s only used with classes and objects. We’re trying to be functional here.</p>
+
+<p>Our approach is simple: perform initialization tasks after loading all the necessary files.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">=0</span> <span class="p">(</span><span class="nv">ne-has-support</span> <span class="nv">*NE_FEATURE_SSL</span><span class="p">))</span>
+      <span class="p">(</span><span class="nv">throw-error</span> <span class="nv">NIL</span> <span class="s">"Missing support for SSL/TLS"</span><span class="p">)</span> <span class="p">)</span>
+</code></pre></div></div>
+
+<p>What we’ve done here is try to ensure <code class="language-plaintext highlighter-rouge">SSL</code> is compiled into the shared library. If it’s not, an error is thrown. <a href="#error-handling">Error handling</a> is explained in the next section.</p>
+
+<p>We also ensure to <a href="http://software-lab.de/doc/refS.html#seed">seed</a> some random data from the system’s random pool:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">seed</span> <span class="p">(</span><span class="nv">in</span> <span class="s">"/dev/urandom"</span> <span class="p">(</span><span class="nv">rd</span> <span class="mi">20</span><span class="p">)))</span>
+</code></pre></div></div>
+
+<p>This tries to obtain <code class="language-plaintext highlighter-rouge">20 bytes</code> from <code class="language-plaintext highlighter-rouge">/dev/urandom</code> using <a href="http://software-lab.de/doc/refR.html#rd">rd</a>, a function for reading raw bytes from an input stream, and initializes the seed with it.</p>
+
+<h1 id="error-handling">Error handling</h1>
+
+<p>PicoLisp provides us with a few ways to handle errors, so why not use them to our advantage?</p>
+
+<p>My idea was:</p>
+
+<ol>
+  <li>Throw errors in the library, but don’t quit/exit disgracefully (a.k.a. be nice).</li>
+  <li>Provide a <em>type</em> of error, and a brief message explaining what happened.</li>
+  <li>Allow the user to catch the errors outside the library.</li>
+</ol>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">throw-error</span> <span class="p">(</span><span class="nv">Session</span> <span class="nv">Message</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">throw</span> <span class="ss">'InternalError</span> <span class="p">(</span><span class="nb">cons</span> <span class="ss">'HttpsError</span> <span class="p">(</span><span class="k">if</span> <span class="nv">Session</span>
+                                              <span class="p">(</span><span class="nv">ne-get-error</span> <span class="nv">Session</span><span class="p">)</span>
+                                              <span class="nv">Message</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>The <strong>Neon C library</strong> has a function <code class="language-plaintext highlighter-rouge">(ne-get-error)</code> which returns a string containing an error message (if any). Sometimes, we want to provide our own error message though.</p>
+
+<p>In the <code class="language-plaintext highlighter-rouge">(throw-error)</code> function, we satisfy the first two requirements by using <a href="http://software-lab.de/doc/refT.html#throw">throw</a> to send an <code class="language-plaintext highlighter-rouge">'InternalError</code>, along with a <a href="http://software-lab.de/doc/refC.html#cons">cons</a> pair containing the <code class="language-plaintext highlighter-rouge">'HttpsError</code> <em>type</em> in the <a href="http://software-lab.de/doc/refC.html#car">car</a> and the error <em>message</em> in the <a href="http://software-lab.de/doc/refC.html#cdr">cdr</a>.</p>
+
+<p>The third requirement is satisfied in user applications with something like this:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">println</span> <span class="p">(</span><span class="k">catch</span> <span class="ss">'InternalError</span>
+  <span class="o">..</span> <span class="p">)</span> <span class="p">)</span>
+
+<span class="nv">-&gt;</span> <span class="p">(</span><span class="nv">HttpsError</span> <span class="o">.</span> <span class="s">"Could not connect to server: Connection timed out"</span><span class="p">)</span>
+</code></pre></div></div>
 
 <h1 id="internal-functions">Internal functions</h1>
 
-<p>The meat of this library is in the internal functions. The <code class="language-plaintext highlighter-rouge">(json-parse-string)</code> and <code class="language-plaintext highlighter-rouge">(json-parse-file)</code> functions validate the JSON string. If those calls are successful, then we can safely iterate over the result and generate our own list.</p>
+<p>As usual, the bulk of the library occurs in the internal functions.</p>
 
-<h2 id="decoding-json">decoding JSON</h2>
+<h2 id="making-https-requests">making HTTPS requests</h2>
 
-<p>We’ll begin by looking at how JSON is decoded in this library.</p>
+<p>PicoLisp 64-bit got a new feature in 2015: <code class="language-plaintext highlighter-rouge">destructuring 'let'</code>.</p>
 
-<h3 id="iterate-object">(iterate-object)</h3>
+<p>If you’re coming from other languages such as Ruby, you would destructure an array like this:</p>
 
-<p>We’ll first look at the <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function. This is a recursive function which loops and iterates through the results of each native C call, and quickly builds a sexy PicoLisp list.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-object</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
-  <span class="p">(</span><span class="nv">make</span>
-    <span class="p">(</span><span class="k">let</span> <span class="nv">Type</span> <span class="p">(</span><span class="nv">json-type</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nb">case</span> <span class="nv">Type</span>  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONArray</span>    <span class="p">(</span><span class="nv">link-json-array</span>  <span class="nv">Value</span><span class="p">))</span>
-                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONObject</span>   <span class="p">(</span><span class="nv">link-json-object</span> <span class="nv">Value</span><span class="p">))</span>
-                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONString</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-string</span>  <span class="nv">Value</span><span class="p">)))</span>
-                  <span class="nv">[</span><span class="o">`</span><span class="nv">*JSONBoolean</span>  <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nb">cond</span>
-                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">1</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'true</span><span class="p">)</span>
-                                            <span class="p">((</span><span class="nb">=</span> <span class="mi">0</span> <span class="p">(</span><span class="nv">json-boolean</span> <span class="nv">Value</span><span class="p">))</span> <span class="ss">'false</span><span class="p">)</span> <span class="nv">]</span>
-                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNumber</span>   <span class="p">(</span><span class="nv">chain</span> <span class="p">(</span><span class="nv">json-number</span>  <span class="nv">Value</span><span class="p">)))</span>
-                  <span class="p">(</span><span class="o">`</span><span class="nv">*JSONNull</span>     <span class="p">(</span><span class="nv">chain</span> <span class="ss">'null</span><span class="p">))</span> <span class="nv">]</span>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"one"</span><span class="p">,</span> <span class="s2">"two"</span><span class="p">]</span>
 </code></pre></div></div>
 
-<p>Lots of meat there.</p>
+<p>In PicoLisp, we use this to obtain a Session (pointer) and Path (string), which is a cons pair returned by the <code class="language-plaintext highlighter-rouge">(create-session)</code> function.</p>
 
-<h3 id="make">(make)</h3>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">create-session-request</span> <span class="p">(</span><span class="nv">Method</span> <span class="nv">Url</span> <span class="nv">Headers</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">Session</span> <span class="o">.</span> <span class="nv">Path</span><span class="p">)</span> <span class="p">(</span><span class="nv">create-session</span> <span class="nv">Url</span><span class="p">)</span>
+        <span class="nv">Request</span> <span class="p">(</span><span class="nv">ne-request-create</span> <span class="nv">Session</span> <span class="nv">Method</span> <span class="nv">Path</span><span class="p">)</span> <span class="p">)</span>
 
-<p>We’ve seen <a href="http://software-lab.de/doc/refM.html#make">make</a> before, but I didn’t fully explain it.</p>
-
-<p>The <code class="language-plaintext highlighter-rouge">(make)</code> function is the instigator for building a list. You put it at the top or start of your function, and watch it build lists using <a href="http://software-lab.de/doc/refL.html#link">link</a> and <a href="http://software-lab.de/doc/refC.html#chain">chain</a>.</p>
-
-<p>We use <a href="http://software-lab.de/doc/refC.html#case">case</a> here as our switch statement. This concept is similar in other programming language. This <code class="language-plaintext highlighter-rouge">(case)</code> call compares the <code class="language-plaintext highlighter-rouge">Type</code> value with those defined as global variables. If a match is found, it runs the following expression. Otherwise it returns <code class="language-plaintext highlighter-rouge">NIL</code> (aka: stop looping, i’m done damnit!).</p>
-
-<p>JSON Arrays and Objects are a bit more tricky to parse, so we’ll get to those later. In the case of <code class="language-plaintext highlighter-rouge">String, Boolean, Number or Null</code>, we add them to the list using <code class="language-plaintext highlighter-rouge">(chain)</code>.</p>
-
-<h3 id="link-json-array">(link-json-array)</h3>
-
-<p>When the value is an Array (<code class="language-plaintext highlighter-rouge">Type = 5 = *JSONArray</code>), we loop through it to build a list (arrays are mapped as lists).</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">link-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">json-array</span> <span class="nv">Value</span><span class="p">)</span>
-    <span class="p">(</span><span class="nv">link</span> <span class="nv">T</span><span class="p">)</span>
-    <span class="p">(</span><span class="nv">for</span> <span class="nv">N</span> <span class="p">(</span><span class="nv">json-array-get-count</span> <span class="nv">Arr</span><span class="p">)</span>
-      <span class="p">(</span><span class="k">let</span> <span class="nv">Val</span> <span class="p">(</span><span class="nv">json-array-get-value</span> <span class="nv">Arr</span> <span class="p">(</span><span class="nv">dec</span> <span class="nv">N</span><span class="p">))</span>
-        <span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">))</span> <span class="nv">]</span>
+    <span class="p">(</span><span class="nv">set-headers</span> <span class="nv">Headers</span> <span class="nv">Request</span><span class="p">)</span>
+    <span class="p">(</span><span class="nb">list</span> <span class="nv">Session</span> <span class="nv">Path</span> <span class="nv">Request</span><span class="p">)</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>You’ll notice we added <code class="language-plaintext highlighter-rouge">(link T)</code> before the <a href="http://software-lab.de/doc/refF.html#f">for loop</a>. After long discussions with Alexander Burger, it was made clear that a marker is required to differentiate Objects from Arrays (in PicoLisp). We do that by appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list.</p>
+<h3 id="create-session">(create-session)</h3>
 
-<p>The <code class="language-plaintext highlighter-rouge">(for)</code> loop is rather simple, but in each case we’re obtaining new values by performing native C calls, and then adding to the list using <code class="language-plaintext highlighter-rouge">(link)</code>.</p>
+<p>In <code class="language-plaintext highlighter-rouge">(create-session)</code>, we parse the Url and obtain all the separate components, which are returned to us in a simple list. We’re already familiar with <code class="language-plaintext highlighter-rouge">(car)</code>, <code class="language-plaintext highlighter-rouge">(cdr)</code>, <code class="language-plaintext highlighter-rouge">(cddr)</code>, etc, but there’s another primitive to get the exact item in a list: it’s the dreaded <a href="http://software-lab.de/doc/ref_.html#;">semicolon (;)</a> <em>(insert JavaScript joke here)</em></p>
 
-<p>If you’ve had your coffee today, you would notice the <a href="http://software-lab.de/doc/refD.html#dec">dec</a> call. As it turns out, <code class="language-plaintext highlighter-rouge">(for)</code> starts with 1 and counts to the total number of items in the Array. We use <code class="language-plaintext highlighter-rouge">(dec N)</code> to start at 0.</p>
-
-<p>Example:</p>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>for N 5
-  N = 1
-  (json-array-get-value Arr 0)
-  ..
-  N = 2
-  (json-array-get-value Arr 1)
-  ..
-</code></pre></div></div>
-
-<p>Finally, the <code class="language-plaintext highlighter-rouge">(link)</code> function makes a call to <code class="language-plaintext highlighter-rouge">(iterate-object)</code>. Remember earlier? when <code class="language-plaintext highlighter-rouge">(link-json-array)</code> was called within <code class="language-plaintext highlighter-rouge">(iterate-object)</code>?</p>
-
-<p><strong>Note:</strong> This is called recursion, where a function calls itself (in our case, with a different value). You can <a href="https://encrypted.google.com/search?hl=en&amp;q=recursion">ask Google</a> about it.</p>
-
-<p>The reason we perform this recursion is in case the value in the array is itself an array or an object. The <code class="language-plaintext highlighter-rouge">(iterate-object)</code> function will simply return a string, boolean, number or null otherwise.</p>
-
-<h3 id="link-json-object">(link-json-object)</h3>
-
-<p>The <code class="language-plaintext highlighter-rouge">(link-json-object)</code> is similar to <code class="language-plaintext highlighter-rouge">(link-json-array)</code> except, you guessed it, it loops over objects.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">..</span>
-<span class="p">(</span><span class="nv">link</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">Name</span> <span class="p">(</span><span class="nv">iterate-object</span> <span class="nv">Val</span><span class="p">)))</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">create-session</span> <span class="p">(</span><span class="nv">Fullurl</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="p">(</span><span class="nv">Uri</span>     <span class="p">(</span><span class="nv">parse-uri</span> <span class="nv">Fullurl</span><span class="p">)</span>
+        <span class="nv">Scheme</span>  <span class="p">(</span><span class="nb">car</span> <span class="nv">Uri</span><span class="p">)</span>
+        <span class="nv">Host</span>    <span class="p">(</span><span class="nb">cadr</span> <span class="nv">Uri</span><span class="p">)</span>
+        <span class="nv">Auth</span>    <span class="p">(</span><span class="c1">; Uri 3)</span>
+        <span class="nv">Port</span>    <span class="p">(</span><span class="nv">get-port</span> <span class="nv">Scheme</span> <span class="p">(</span><span class="c1">; Uri 4))</span>
+        <span class="nv">Session</span> <span class="p">(</span><span class="nv">ne-session-create</span> <span class="nv">Scheme</span> <span class="nv">Host</span> <span class="nv">Port</span><span class="p">)</span>
+        <span class="nv">Path</span>    <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="c1">; Uri 5) (when (; Uri 6) (pack "?" (; Uri 6)))) )</span>
 <span class="o">..</span>
 </code></pre></div></div>
 
-<p>The other difference is during the <code class="language-plaintext highlighter-rouge">(link)</code> call, it appends a <a href="http://software-lab.de/doc/refC.html#cons">cons</a> pair instead of a single value. We do this because a JSON Object is represented as a <code class="language-plaintext highlighter-rouge">(cons)</code> pair in PicoLisp.</p>
+<p>Notice we use <code class="language-plaintext highlighter-rouge">(; Uri 3)</code>. This is cool, it’ll get the item in the 3rd position in the list. In this case, it’s the auth credentials (usually user:password).</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">{</span><span class="s">"hello"</span><span class="err">:</span><span class="s">"world"</span><span class="nv">}</span> <span class="nv">&lt;-&gt;</span> <span class="o">'</span><span class="p">((</span><span class="s">"hello"</span> <span class="o">.</span> <span class="s">"world"</span><span class="p">))</span>
+<p>The semicolon has other uses as well, so make sure you read about it.</p>
+
+<h3 id="set-auth-credentials">(set-auth-credentials)</h3>
+
+<p>This function does two things, one is dangerous, the other is cool.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">set-auth-credentials</span> <span class="p">(</span><span class="nv">Session</span> <span class="nv">Auth</span><span class="p">)</span>
+  <span class="nv">[let</span> <span class="nv">Credentials</span> <span class="p">(</span><span class="nv">split</span> <span class="p">(</span><span class="nv">chop</span> <span class="nv">Auth</span><span class="p">)</span> <span class="s">":"</span><span class="p">)</span>
+    <span class="p">(</span><span class="k">setq</span> <span class="nv">*User</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Credentials</span><span class="p">))</span>
+          <span class="nv">*Pass</span> <span class="p">(</span><span class="nv">pack</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Credentials</span><span class="p">))</span> <span class="nv">]</span>
+
+  <span class="p">(</span><span class="nv">ne-set-server-auth</span>
+    <span class="nv">Session</span>
+    <span class="p">(</span><span class="nv">lisp</span> <span class="ss">'ne_auth_creds</span> <span class="o">'</span><span class="p">((</span><span class="nv">A</span> <span class="nv">B</span> <span class="nv">C</span> <span class="nv">D</span> <span class="nv">E</span><span class="p">)</span> <span class="p">(</span><span class="nv">do-auth</span> <span class="nv">A</span> <span class="nv">B</span> <span class="nv">C</span> <span class="nv">D</span> <span class="nv">E</span><span class="p">)))</span>
+    <span class="mi">0</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>Of course, this function also recursively calls <code class="language-plaintext highlighter-rouge">(iterate-object)</code>.</p>
-
-<h2 id="encoding-json">encoding JSON</h2>
-
-<p>Decoding was fun, because <code class="language-plaintext highlighter-rouge">Parson</code> did most of the work for us. Encoding is ugly, so I tried to make it as simple and intuitive as possible (less chance for bugs).</p>
-
-<h3 id="iterate-list">(iterate-list)</h3>
-
-<p>Since we now have a friendly JSON string represented as a PicoLisp list, we’ll iterate over it and turn it back into a JSON string.</p>
-
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">iterate-list</span> <span class="p">(</span><span class="nv">Item</span><span class="p">)</span>
-  <span class="p">(</span><span class="k">let</span> <span class="nv">Value</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Item</span><span class="p">)</span>
-    <span class="p">(</span><span class="nb">or</span>
-      <span class="p">(</span><span class="nv">get-null</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">get-boolean</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">get-json-number</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">get-json-string</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">get-json-array</span> <span class="nv">Value</span><span class="p">)</span>
-      <span class="p">(</span><span class="nv">make-object</span> <span class="nv">Value</span><span class="p">)</span> <span class="nv">]</span>
-</code></pre></div></div>
-
-<p>This is a bit sneaky, but I :heart: it. I’m not sure how efficient it is either, but it works well, and I’d rather have <em>slow, but valid data</em> than <em>fast, but invalid data</em></p>
+<p>Let’s talk about danger first. In this function, we uses <a href="http://software-lab.de/doc/refS.html#setq">setq</a> to create some <em>temporary</em> global variables. I say temporary because we get rid of them later. The danger here is this is <strong>NOT functional</strong>. It’s a side-effect which could be the source of bugs in the future. OOP lovers don’t care about this kind of stuff, but in FP land it’s a big no-no.</p>
 
 <blockquote>
-  <p>It’s not slow, in fact it’s incredibly fast based on my opinion of what fast looks like.</p>
+  <p><strong>Note:</strong> The reason we do this is because of the <code class="language-plaintext highlighter-rouge">(do-auth)</code> function, which we’ll explain later.</p>
 </blockquote>
 
-<p>This function uses <a href="http://software-lab.de/doc/refO.html#or">or</a> as a conditional statement. The <code class="language-plaintext highlighter-rouge">Value</code> passes through each function to determine the type of value it is, as well as to convert it to a string, number, boolean, null, or whatever.</p>
+<p>The <a href="http://software-lab.de/doc/refL.html#lisp">lisp</a> function is quite special. When using <code class="language-plaintext highlighter-rouge">(native)</code> for C calls, certain functions require a callback as an argument, or “function pointer” (Google it).</p>
 
-<h3 id="get-null">(get-null)</h3>
+<p>The <code class="language-plaintext highlighter-rouge">(ne-set-server-auth)</code> function requires a callback as its second argument, so we create one using <code class="language-plaintext highlighter-rouge">(lisp)</code>. If you’ve read the <a href="https://github.com/aw/picolisp-json/blob/master/EXPLAIN.md#make-array">JSON explanations</a>, you’ll quickly notice there’s an anonymous function in this <code class="language-plaintext highlighter-rouge">(lisp)</code> call. It essentially sends 5 arguments (which are numbers) to the <code class="language-plaintext highlighter-rouge">(do-auth)</code> function, under the name <code class="language-plaintext highlighter-rouge">ne_auth_creds</code>.</p>
 
-<p>This function does nothing special, but I wanted to show something interesting.</p>
+<p>Here’s the C code to give a better picture:</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-null</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
-  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">==</span> <span class="ss">'null</span> <span class="nv">Value</span><span class="p">)</span> <span class="s">"null"</span><span class="p">)</span> <span class="nv">]</span>
+<pre><code class="language-C">typedef int (*ne_auth_creds)(void *userdata, const char *realm, int attempt,
+			     char *username, char *password);
+
+void ne_set_server_auth(ne_session *sess, ne_auth_creds creds, void *userdata);
+</code></pre>
+
+<p>See that? All arguments for <code class="language-plaintext highlighter-rouge">ne_auth_creds</code> are numbers (void, pointers, int)..</p>
+
+<h3 id="do-auth">(do-auth)</h3>
+
+<p>This function is our actual callback function. It’s the one that will be called from the C library.</p>
+
+<p>The main requirement is to set the <code class="language-plaintext highlighter-rouge">username</code>, <code class="language-plaintext highlighter-rouge">password</code>, and return an integer. We do that here:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">do-auth</span> <span class="p">(</span><span class="nv">Userdata</span> <span class="nv">Realm</span> <span class="nv">Attempt</span> <span class="nv">Username</span> <span class="nv">Password</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">native</span> <span class="s">"@"</span> <span class="s">"strncpy"</span> <span class="nv">NIL</span> <span class="nv">Username</span> <span class="nv">*User</span> <span class="nv">*NE_ABUFSIZ</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">native</span> <span class="s">"@"</span> <span class="s">"strncpy"</span> <span class="nv">NIL</span> <span class="nv">Password</span> <span class="nv">*Pass</span> <span class="nv">*NE_ABUFSIZ</span><span class="p">)</span>
+  <span class="nv">Attempt</span> <span class="p">)</span>
 </code></pre></div></div>
 
-<p>You’ll notice we check if <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">==</code> to <code class="language-plaintext highlighter-rouge">'null</code>. What’s going on here? Using double equal signs checks for <a href="http://software-lab.de/doc/ref.html#cmp"><strong>Pointer equality</strong></a>. This is really important, make sure you understand the difference for a happy PicoLisp life.</p>
+<p>Whoa wait, what’s that <code class="language-plaintext highlighter-rouge">@</code> thing doing there? Remember we talked about the <a href="https://github.com/aw/picolisp-nanomsg/blob/master/EXPLAIN.md#nn_symbols">@ result</a>? Well, this is <strong>NOT</strong> that.</p>
 
-<p>This checks if the things we’re comparing are not just equal, but also <em>identical</em>. In other words: Is <code class="language-plaintext highlighter-rouge">null</code> the exact same thing as <code class="language-plaintext highlighter-rouge">null</code> (<code class="language-plaintext highlighter-rouge">Value</code>). Not <code class="language-plaintext highlighter-rouge">"null"</code> or <code class="language-plaintext highlighter-rouge">NULL</code> or any other variation, but <code class="language-plaintext highlighter-rouge">null</code>. Yes. Got it?</p>
+<p>This is actually a <a href="http://software-lab.de/doc/native.html#libs">transient symbol</a> which refers to the main program (PicoLisp).</p>
 
-<h3 id="get-json-array">(get-json-array)</h3>
+<blockquote>
+  <p><strong>Note:</strong> In english, this means you can call standard C functions like <code class="language-plaintext highlighter-rouge">malloc</code> and <code class="language-plaintext highlighter-rouge">strcpy</code> (j/k, at least use strncpy).</p>
+</blockquote>
 
-<p>You should remember earlier we discussed appending <code class="language-plaintext highlighter-rouge">T</code> as the first element in the list, in the case of an Array.</p>
+<p>This function uses the <code class="language-plaintext highlighter-rouge">*User and *Pass</code> global variables we defined earlier and the C <code class="language-plaintext highlighter-rouge">strncpy()</code> functions to copy the global variables into the <code class="language-plaintext highlighter-rouge">Username</code> and <code class="language-plaintext highlighter-rouge">Password</code> <em>pointers</em>. The other approach would be to hardcode the username/password in the function, but really.. who does that?</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">get-json-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
-  <span class="p">(</span><span class="nb">when</span> <span class="p">(</span><span class="nv">=T</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">Value</span><span class="p">))</span> <span class="p">(</span><span class="nb">make-array</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">Value</span><span class="p">)))</span> <span class="nv">]</span>
+<p>At the end of <code class="language-plaintext highlighter-rouge">(do-auth)</code>, we return the <code class="language-plaintext highlighter-rouge">Attempt</code> variable, which based on the <strong>Neon</strong> documentation, would only perform <em>one</em> authentication attempt before failing.</p>
+
+<h3 id="del-auth-credentials">(del-auth-credentials)</h3>
+
+<p>Of course, we need to remove the auth credentials once we’re done with them. The <code class="language-plaintext highlighter-rouge">(ne-forget-auth)</code> function will remove them from memory, and <a href="http://software-lab.de/doc/refO.html#off">off</a> will set the global variables to <code class="language-plaintext highlighter-rouge">NIL</code>.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">del-auth-credentials</span> <span class="p">(</span><span class="nv">Session</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">ne-forget-auth</span> <span class="nv">Session</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">off</span> <span class="nv">*User</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">off</span> <span class="nv">*Pass</span><span class="p">)</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>What we’re doing here is checking if the <a href="http://software-lab.de/doc/refC.html#car">car</a> of the <code class="language-plaintext highlighter-rouge">Value</code> is <code class="language-plaintext highlighter-rouge">T</code>. If yes, then call the <code class="language-plaintext highlighter-rouge">(make-array)</code> function.</p>
+<blockquote>
+  <p><strong>Note:</strong> We could have also done: <code class="language-plaintext highlighter-rouge">(off *User *Pass)</code>.</p>
+</blockquote>
 
-<h3 id="make-array">(make-array)</h3>
+<h3 id="set-headers">(set-headers)</h3>
 
-<p>This function builds an Array suitable for JSON.</p>
+<p>There’s nothing magical in this function, just the usual mapping over a list with an <strong>anonymous function</strong>.</p>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nb">make-array</span> <span class="p">(</span><span class="nv">Value</span><span class="p">)</span>
-  <span class="p">(</span><span class="nv">pack</span> <span class="s">"["</span>
-        <span class="p">(</span><span class="nv">glue</span> <span class="s">","</span>
-              <span class="p">(</span><span class="nb">mapcar</span>
-                <span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
-                <span class="nv">Value</span> <span class="p">)</span> <span class="p">)</span>
-        <span class="s">"]"</span> <span class="nv">]</span>
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">set-headers</span> <span class="p">(</span><span class="nv">Headers</span> <span class="nv">Request</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">mapcar</span>
+    <span class="o">'</span><span class="p">((</span><span class="nv">L</span><span class="p">)</span> <span class="p">(</span><span class="nv">ne-add-request-header</span> <span class="nv">Request</span> <span class="p">(</span><span class="nb">car</span> <span class="nv">L</span><span class="p">)</span> <span class="p">(</span><span class="nb">cdr</span> <span class="nv">L</span><span class="p">)))</span>
+    <span class="p">(</span><span class="nb">append</span> <span class="nv">Headers</span> <span class="nv">*Headers</span><span class="p">)</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>We’ve seen what <a href="http://software-lab.de/doc/refP.html#pack">pack</a> does. We use it to build our Array with opening and closing <code class="language-plaintext highlighter-rouge">[]</code> brackets.</p>
+<p>I want to highlight <a href="http://software-lab.de/doc/refA.html#append">append</a> which can be used to <em>append</em> a list to another. Who would have known?</p>
 
-<p>The cool thing I discovered recently is <a href="http://software-lab.de/doc/refG.html#glue">glue</a>. It is similar to <code class="language-plaintext highlighter-rouge">Array.join()</code> in Ruby and JavaScript, by concatenating a list with the supplied argument. In our case, it’s a comma <code class="language-plaintext highlighter-rouge">,</code>.</p>
+<p>The tricky thing is there’s an order to it. We want the <code class="language-plaintext highlighter-rouge">Headers</code> variable to be used before the <code class="language-plaintext highlighter-rouge">*Headers</code> global variable. This way if you specify your own <code class="language-plaintext highlighter-rouge">User-Agent</code>, then it’ll use that instead of the default.</p>
 
-<p>Here we’re doing something a little different.</p>
+<p>There were other ways to do this, but I just wanted to use <code class="language-plaintext highlighter-rouge">(append)</code>.</p>
 
-<p>If you remember <code class="language-plaintext highlighter-rouge">(mapcar)</code>, you’ll know the first argument is a function, but in this code we have this:</p>
+<h3 id="set-request-body">(set-request-body)</h3>
 
-<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">'</span><span class="p">((</span><span class="nv">N</span><span class="p">)</span> <span class="p">(</span><span class="nv">iterate-list</span> <span class="p">(</span><span class="nb">cons</span> <span class="nv">NIL</span> <span class="nv">N</span><span class="p">)))</span>
+<p>Now here’s some more dangerous code if you haven’t seen it yet. This function is used to set the request Body (ex: in a <code class="language-plaintext highlighter-rouge">POST</code> or <code class="language-plaintext highlighter-rouge">PUT</code> request) in a manually allocated buffer.</p>
+
+<p>The reason for this is due to an <em>interesting</em> coding choice used in the <strong>Neon</strong> C library. It doesn’t copy the body in memory for you, so at the end of a <code class="language-plaintext highlighter-rouge">(native)</code> call, the body (memory) is free’d and <strong>Neon</strong> can’t use it anymore (because PicoLisp automatically frees memory).</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">set-request-body</span> <span class="p">(</span><span class="nv">Request</span> <span class="nv">Body</span><span class="p">)</span>
+  <span class="p">(</span><span class="nb">when</span> <span class="nv">Body</span>
+    <span class="p">(</span><span class="k">let</span> <span class="p">(</span><span class="nv">Size</span> <span class="p">(</span><span class="nv">size</span> <span class="nv">Body</span><span class="p">)</span>
+          <span class="nv">Buf</span> <span class="p">(</span><span class="nv">native</span> <span class="s">"@"</span> <span class="s">"malloc"</span> <span class="ss">'N</span> <span class="nv">Size</span><span class="p">)</span> <span class="p">)</span>
+
+      <span class="p">(</span><span class="nv">native</span> <span class="s">"@"</span> <span class="s">"memset"</span> <span class="nv">NIL</span> <span class="nv">Buf</span> <span class="nv">Body</span> <span class="nv">Size</span><span class="p">)</span>
+      <span class="p">(</span><span class="k">let</span> <span class="nv">Buffer</span> <span class="p">(</span><span class="nv">native</span> <span class="s">"@"</span> <span class="s">"strncpy"</span> <span class="ss">'N</span> <span class="nv">Buf</span> <span class="nv">Body</span> <span class="nv">Size</span><span class="p">)</span>
+        <span class="p">(</span><span class="nv">ne-set-request-body-buffer</span> <span class="nv">Request</span> <span class="nv">Buffer</span> <span class="nv">Size</span><span class="p">)</span>
+        <span class="nv">Buf</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>Above is an <strong>anonymous function</strong>. If you’re familiar with Ruby, it looks something like this:</p>
+<p>We’ll first obtain the <a href="http://software-lab.de/doc/refS.html#size">size</a> of the request body. We do this for safety, and because it makes us feel warm inside.</p>
 
-<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">-&gt;</span><span class="p">(</span><span class="no">N</span><span class="p">)</span> <span class="p">{</span> <span class="n">iterate</span><span class="o">-</span><span class="n">list</span> <span class="p">[</span><span class="kp">nil</span><span class="p">,</span> <span class="no">N</span><span class="p">]</span> <span class="p">}</span>
+<p>Since we’re forced to manually allocate a buffer for the request body, you can see lots of funky C stuff in there.</p>
+
+<p>In the end though, we’re able to send a perfectly good request body (<code class="language-plaintext highlighter-rouge">Buffer</code>) in our HTTP(S) request.</p>
+
+<p>Some sharp eyes may notice we don’t <code class="language-plaintext highlighter-rouge">free</code> the allocated memory here. <em>evil laugh</em>. Don’t worry, we’ve actually handled this elegantly, which you can read about in <a href="#cleaning-up-errors">cleaning up errors</a>.</p>
+
+<h2 id="parsing-https-responses">Parsing HTTPS responses</h2>
+
+<p>Here we cover the function which dispatches a request, and then processes the response.</p>
+
+<h3 id="request-dispatch">(request-dispatch)</h3>
+
+<p>The <strong>Neon</strong> C library provides a function to dispatch HTTP(S) requests, except for some odd reason it discards the response body before you can do anything with it. How horrible.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">request-dispatch</span> <span class="p">(</span><span class="nv">Request</span> <span class="nv">Session</span><span class="p">)</span>
+  <span class="p">(</span><span class="nv">use</span> <span class="nv">Body</span>
+    <span class="p">(</span><span class="nb">loop</span>
+      <span class="p">(</span><span class="nv">begin-request</span><span class="p">)</span>
+
+      <span class="p">(</span><span class="k">setq</span> <span class="nv">Body</span> <span class="p">(</span><span class="k">if</span> <span class="nv">Filename</span>
+                    <span class="p">(</span><span class="nv">download-file</span> <span class="nv">Request</span> <span class="nv">Filename</span><span class="p">)</span>
+                    <span class="p">(</span><span class="nv">process-body</span> <span class="nv">Request</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+
+        <span class="p">(</span><span class="nv">T</span> <span class="p">(</span><span class="nv">end-request</span><span class="p">)</span> <span class="ss">'done</span><span class="p">)</span> <span class="p">)</span>
+    <span class="nv">Body</span> <span class="nv">]</span>
 </code></pre></div></div>
 
-<p>In the case of PicoLisp, our function that we defined on the fly will be applied to the <code class="language-plaintext highlighter-rouge">Value</code>, but will first make a recursive call to <code class="language-plaintext highlighter-rouge">(iterate-list)</code> with a <code class="language-plaintext highlighter-rouge">(cons)</code> pair as its argument.</p>
+<p>In this function, we’ve got an infinite <a href="http://software-lab.de/doc/refL.html#loop">loop</a> which tries to make a request, save the <strong>response body</strong> to a file or whatever, and exits the loop when all is good.</p>
 
-<h3 id="make-object">(make-object)</h3>
+<p>The <code class="language-plaintext highlighter-rouge">(end-request)</code> function implements a <em>retry</em> mechanism, and returns either <code class="language-plaintext highlighter-rouge">T</code> or <code class="language-plaintext highlighter-rouge">NIL</code> (or throws an error). If the result is <code class="language-plaintext highlighter-rouge">T</code>, we execute <code class="language-plaintext highlighter-rouge">'done</code>, which is nothing really, and return the response body. Otherwise it loops.</p>
 
-<p>This function is almost identical to <code class="language-plaintext highlighter-rouge">(make-array)</code>, except it generates a JSON Object using opening and closing <code class="language-plaintext highlighter-rouge">{}</code> braces, of course iterating recursively with <code class="language-plaintext highlighter-rouge">(iterate-list)</code>.</p>
+<p>There’s something <em>very</em> different in this function though. Do you see it?</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">Filename</code> variable is not sent as an argument to the function. So, how does it work? If you look at the <a href="#req">req</a> function, you’ll see the filename is (optionally) set as an argument. Our <code class="language-plaintext highlighter-rouge">(request-dispatch)</code> function uses the <code class="language-plaintext highlighter-rouge">Filename</code> variable from there.</p>
+
+<p>This is called <code class="language-plaintext highlighter-rouge">dynamic scoping</code>, one of the great advantages of PicoLisp. You can do stuff like that.</p>
+
+<blockquote>
+  <p><strong>Mr. Burger’s Note:</strong> As much as this is an advantage, it’s also a sword hanging over your head. Use wisely.</p>
+</blockquote>
+
+<h3 id="download-file">(download-file)</h3>
+
+<p>This is a cool function. It checks if the <code class="language-plaintext highlighter-rouge">Filename</code> is set to <code class="language-plaintext highlighter-rouge">T</code>. If yes, then it generates a <code class="language-plaintext highlighter-rouge">(random-filename)</code>, otherwise it uses the filename provided.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">download-file</span> <span class="p">(</span><span class="nv">Request</span> <span class="nv">Filename</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="nv">File</span> <span class="p">(</span><span class="k">if</span> <span class="p">(</span><span class="nv">=T</span> <span class="nv">Filename</span><span class="p">)</span>
+                <span class="p">(</span><span class="nv">random-filename</span><span class="p">)</span>
+                <span class="nv">Filename</span> <span class="p">)</span>
+
+    <span class="p">(</span><span class="k">let</span> <span class="nv">Fd</span> <span class="p">(</span><span class="nb">open</span> <span class="nv">File</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">ne-read-response-to-fd</span> <span class="nv">Request</span> <span class="nv">Fd</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb">close</span> <span class="nv">Fd</span><span class="p">)</span>
+      <span class="p">(</span><span class="nb">list</span> <span class="p">(</span><span class="nb">cons</span> <span class="s">"Filename"</span>  <span class="o">.</span> <span class="nv">File</span><span class="p">)</span>
+            <span class="p">(</span><span class="nb">cons</span> <span class="s">"Filesize"</span>    <span class="p">(</span><span class="nb">car</span> <span class="p">(</span><span class="nv">info</span> <span class="nv">File</span><span class="p">)))</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>We use <a href="http://software-lab.de/doc/refO.html#open">open</a> and <a href="http://software-lab.de/doc/refC.html#close">close</a> when working with files. The <code class="language-plaintext highlighter-rouge">(ne-read-response-to-fd)</code> function is designed to write the response body to a file descriptor. How convenient.</p>
+
+<p>Finally, we return a list with two cons pairs, one containing the Filename (potentially randomly generated) and the other containing the Filesize, which is captured using the <a href="http://software-lab.de/doc/refI.html#info">info</a> function.</p>
+
+<h3 id="random-stuff">random stuff</h3>
+
+<p>Earlier, we looked at seeding random data, why? Well here’s why:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nv">de</span> <span class="nv">random-filename</span> <span class="p">()</span>
+  <span class="p">(</span><span class="nv">tmp</span> <span class="s">"dl-"</span> <span class="p">(</span><span class="nv">random-id</span><span class="p">)</span> <span class="s">"-"</span> <span class="p">(</span><span class="nv">inc</span> <span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="s">".tmp"</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="nv">[de</span> <span class="nv">random-id</span> <span class="p">()</span>
+  <span class="p">(</span><span class="nv">lowc</span> <span class="p">(</span><span class="nv">hex</span> <span class="p">(</span><span class="nb">abs</span> <span class="p">(</span><span class="nv">rand</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">(random-filename)</code> function generates a string that looks like this: <code class="language-plaintext highlighter-rouge">dl-7d702f36-1.tmp</code>.</p>
+
+<p>It uses <a href="http://software-lab.de/doc/refT.html#tmp">tmp</a> to obtain the PicoLisp processes’s temp directory, and the <code class="language-plaintext highlighter-rouge">(random-id)</code> function to generate a random id.</p>
+
+<p>Some cool functional stuff here: <a href="http://software-lab.de/doc/refL.html#lowc">lowc</a> is used to lowercase a string, <a href="http://software-lab.de/doc/refH.html#hex">hex</a> to generate a hexadecimal string, <a href="http://software-lab.de/doc/refA.html#abs">abs</a> to return the absolute value of <a href="http://software-lab.de/doc/refR.html#rand">rand</a> which returns a random integer (which should truly be random thanks to our <a href="#initialization">seed initialization</a> from earlier).</p>
+
+<h3 id="process-body">(process-body)</h3>
+
+<p>This doesn’t do anything we haven’t seen before. It uses the familiar <code class="language-plaintext highlighter-rouge">(make)</code>, <code class="language-plaintext highlighter-rouge">(link)</code>, and <code class="language-plaintext highlighter-rouge">(pack)</code> to generate a list.</p>
+
+<p>In fact, the <code class="language-plaintext highlighter-rouge">(ne-read-response-block)</code> function is set to only read a specific <code class="language-plaintext highlighter-rouge">*Buffer_size</code> <em>(8192 bytes)</em> of data at a time. We have a simple loop in <code class="language-plaintext highlighter-rouge">(process-body)</code> to obtain the full body and then pack it all together.</p>
+
+<h3 id="parse-response">(parse-response)</h3>
+
+<p>Without going into too much detail for <code class="language-plaintext highlighter-rouge">(parse-response)</code>, I want to discuss something we haven’t seen yet: <a href="http://software-lab.de/doc/refS.html#struct">struct</a>.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">..</span>
+<span class="p">(</span><span class="nv">struct</span> <span class="p">(</span><span class="nv">ne-get-status</span> <span class="nv">Request</span><span class="p">)</span> <span class="o">'</span><span class="p">(</span><span class="nv">I</span> <span class="nv">I</span> <span class="nv">I</span> <span class="nv">I</span> <span class="nv">S</span><span class="p">))</span> <span class="err">#</span> <span class="nv">*ne_status</span> <span class="nv">Status</span> <span class="nv">structure</span>
+<span class="o">..</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">(struct)</code> function can be used to <em>extract</em> a C structure. The first argument is the structure, in our case it’s the result of <code class="language-plaintext highlighter-rouge">(ne-get-status)</code>, and the structure contains 4 integers and 1 string.</p>
+
+<p>The C code for this:</p>
+
+<pre><code class="language-C">typedef struct {
+    int major_version;
+    int minor_version;
+    int code; /* Status-Code value */
+    int klass; /* Class of Status-Code (1-5) */
+    char *reason_phrase;
+} ne_status;
+</code></pre>
+
+<p>We return those in the response for each request. Actually we don’t return <code class="language-plaintext highlighter-rouge">klass</code> because who cares.</p>
+
+<h3 id="skipping-ahead-end-request-session">Skipping ahead: (end-request-session)</h3>
+
+<p>When we’re done with our request/response, it’s time to clean up. We’ve got a nice function for that:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(de end-request-session (Request Session Buffer)
+  (when Buffer (native "@" "free" NIL Buffer))
+  (ne-request-destroy Request)
+  (del-auth-credentials Session)
+  (end-session Session) )
+</code></pre></div></div>
+
+<p>This free’s the <code class="language-plaintext highlighter-rouge">Buffer</code> we allocated earlier using <code class="language-plaintext highlighter-rouge">malloc</code>.</p>
+
+<p>The real question is: when is this called? Let’s get to that right now.</p>
+
+<h2 id="cleaning-up-errors">Cleaning up errors</h2>
+
+<p>Earlier, we discussed the ability to <code class="language-plaintext highlighter-rouge">(throw)</code> an error, and that’s nice when something is there to catch it. But, what happens when that <em>thing</em> doesn’t know about the internals? Does it know how to cleanly end the request, end the session, free up manually allocated buffers?</p>
+
+<p><strong>Nope.</strong></p>
+
+<p>Our solution happens at the highest level in the most important function: <code class="language-plaintext highlighter-rouge">(req)</code>.</p>
+
+<h3 id="req">(req)</h3>
+
+<p>This is our public function which does it all.</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">[de</span> <span class="nv">req</span> <span class="p">(</span><span class="nv">Method</span> <span class="nv">Url</span> <span class="nv">Headers</span> <span class="nv">Filename</span> <span class="nv">Body</span><span class="p">)</span>
+  <span class="p">(</span><span class="k">let</span> <span class="p">((</span><span class="nv">Session</span> <span class="nv">Path</span> <span class="nv">Request</span><span class="p">)</span> <span class="p">(</span><span class="nv">create-session-request</span> <span class="nv">Method</span> <span class="nv">Url</span> <span class="nv">Headers</span><span class="p">))</span>
+    <span class="p">(</span><span class="k">let</span> <span class="nv">Buffer</span> <span class="p">(</span><span class="nv">set-request-body</span> <span class="nv">Request</span> <span class="nv">Body</span><span class="p">)</span>
+      <span class="p">(</span><span class="nv">finally</span>
+        <span class="p">(</span><span class="nv">end-request-session</span> <span class="nv">Request</span> <span class="nv">Session</span> <span class="nv">Buffer</span><span class="p">)</span>
+        <span class="p">(</span><span class="k">let</span> <span class="nv">Output</span> <span class="p">(</span><span class="nv">request-dispatch</span> <span class="nv">Request</span> <span class="nv">Session</span><span class="p">)</span>
+          <span class="p">(</span><span class="nv">parse-response</span> <span class="nv">Request</span> <span class="nv">Url</span> <span class="nv">Output</span><span class="p">)</span> <span class="nv">]</span>
+</code></pre></div></div>
+
+<p>The first thing we do is obtain the request <code class="language-plaintext highlighter-rouge">Buffer</code> (which may possibly be empty). Next, we have this very useful <a href="http://software-lab.de/doc/refF.html#finally">finally</a> call. That’s our safety net. The first argument is the <em>“thing you do if an error is throw, or when you’re done processing”</em>. The second argument is the <em>“processing”</em> part.</p>
+
+<p>In other words, if a <code class="language-plaintext highlighter-rouge">(throw)</code> is called in our code, it will execute <code class="language-plaintext highlighter-rouge">(end-request-session)</code> which cleans memory and keeps things sane. Otherwise, it runs the <code class="language-plaintext highlighter-rouge">(request-dispatch)</code> and <code class="language-plaintext highlighter-rouge">(parse-response)</code>, then (finally) it runs <code class="language-plaintext highlighter-rouge">(end-request-session)</code> before returning the response from <code class="language-plaintext highlighter-rouge">(parse-response)</code>.</p>
+
+<p>Isn’t that amazing? Sasuga PicoLisp.</p>
 
   </div>
   

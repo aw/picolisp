@@ -49,6 +49,10 @@
           crystal
         </a></li>
       
+        <li><a href="https://picolisp.a1w.ca/2024/06/17/sqlite/">
+          sqlite3
+        </a></li>
+      
         <li><a href="https://picolisp.a1w.ca/2023/01/09/zig/">
           zig
         </a></li>
@@ -118,106 +122,69 @@
   
   <div class="post">
     <h1 class="post-title">
-      <a href="https://picolisp.a1w.ca/2019/03/15/awscurl/">
-        PicoLisp AWS CLI tool using OpenSSL and Curl
+      <a href="https://picolisp.a1w.ca/2020/01/02/action/">
+        GitHub Action to run 32-bit or 64-bit PicoLisp code
       </a>
     </h1>
 
-    <span class="post-date">15 Mar 2019</span>
+    <span class="post-date">02 Jan 2020</span>
 
-    <p>You can <a href="https://github.com/aw/picolisp-awscurl">get it on GitHub</a>.</p>
+    <p>You can <a href="https://github.com/aw/picolisp-action">get it on GitHub</a> or the <a href="https://github.com/marketplace/actions/picolisp-action">GitHub Marketplace</a>.</p>
 
-<p>This command line tool can be used to sign <a href="https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html">AWS Signature Version 4</a> requests and make calls to various AWS APIs.</p>
+<p>This action downloads, compiles, and globally installs PicoLisp.
+It can be used to run PicoLisp code such as <a href="https://github.com/aw/picolisp-unit">units tests</a>.</p>
 
-<p><a href="https://github.com/aw/picolisp-awscurl"><img src="https://img.shields.io/github/release/aw/picolisp-awscurl.svg" alt="GitHub release" /></a> <a href="https://github.com/aw/picolisp-unit.git"><img src="https://img.shields.io/badge/[deps]&#32;picolisp--unit-v3.0.0-ff69b4.svg" alt="Dependency" /></a> <img src="https://github.com/aw/picolisp-awscurl/workflows/CI/badge.svg?branch=master" alt="Build status" /></p>
+<p><img src="https://user-images.githubusercontent.com/153401/70022112-e4695580-158a-11ea-886d-0db01dbe7a66.png" alt="Example PicoLisp tests" /></p>
 
-<ol>
-  <li><a href="#requirements">Requirements</a></li>
-  <li><a href="#usage">Usage</a></li>
-  <li><a href="#options">Options</a></li>
-</ol>
+<h2 id="inputs">Inputs</h2>
 
-<h1 id="requirements">Requirements</h1>
+<h3 id="version"><code class="language-plaintext highlighter-rouge">version</code></h3>
 
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">picolisp</code>: 32-bit or 64-bit <code class="language-plaintext highlighter-rouge">v3.1.11+</code>, tested up to PicoLisp <code class="language-plaintext highlighter-rouge">v20.6.29</code>, <a href="https://github.com/aw/picolisp-awscurl/actions/">see test runs</a></li>
-  <li><code class="language-plaintext highlighter-rouge">libcrypto.so</code>: for using <code class="language-plaintext highlighter-rouge">--native</code> functions with PicoLisp <code class="language-plaintext highlighter-rouge">v17.12+</code></li>
-  <li><code class="language-plaintext highlighter-rouge">picolisp-unit</code>: <code class="language-plaintext highlighter-rouge">v3.0.0+</code> for testing the library</li>
-  <li><code class="language-plaintext highlighter-rouge">openssl</code>: <code class="language-plaintext highlighter-rouge">v1.0.0+</code> for signing and hashing strings</li>
-  <li><code class="language-plaintext highlighter-rouge">curl</code>: for sending requests to the AWS APIs</li>
-</ul>
+<p><strong>Optional</strong> The version of PicoLisp. Default ‘20.6’. Accepts <code class="language-plaintext highlighter-rouge">19.12</code>, <code class="language-plaintext highlighter-rouge">19.6</code>, <code class="language-plaintext highlighter-rouge">18.12</code>, <code class="language-plaintext highlighter-rouge">18.6</code>, <code class="language-plaintext highlighter-rouge">17.12</code>, <code class="language-plaintext highlighter-rouge">latest</code>, <code class="language-plaintext highlighter-rouge">pil21</code></p>
 
-<h3 id="notes">Notes</h3>
+<h3 id="architecture"><code class="language-plaintext highlighter-rouge">architecture</code></h3>
 
-<p>The file <code class="language-plaintext highlighter-rouge">libawscurl.l</code> can be included as a library, rather than using the command line <code class="language-plaintext highlighter-rouge">awscurl.l</code>. Function are prefixed with <code class="language-plaintext highlighter-rouge">awscurl-</code> and variables are prefixed with <code class="language-plaintext highlighter-rouge">*Aws_</code>.</p>
+<p><strong>Optional</strong> The architecture of PicoLisp (32 or 64-bit). Default <code class="language-plaintext highlighter-rouge">src64</code>. Accepts <code class="language-plaintext highlighter-rouge">src</code>, <code class="language-plaintext highlighter-rouge">src64</code></p>
 
-<h1 id="usage">Usage</h1>
+<h2 id="example-usage">Example usage</h2>
 
-<h2 id="warning">WARNING</h2>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- uses: aw/picolisp-action@v2
+  with:
+    version: 18.12
+    architecture: src64
 
-<p>There is currently <strong>no validation</strong> on command line arguments. Be careful the input you provide. <a href="https://github.com/aw/picolisp-awscurl/issues/1">See issue #1</a></p>
-
-<h3 id="environment-variables">Environment variables</h3>
-
-<p>The following environment variables are used:</p>
-
-<ul>
-  <li><code class="language-plaintext highlighter-rouge">AWS_PROFILE</code>: Default: <code class="language-plaintext highlighter-rouge">default</code></li>
-  <li><code class="language-plaintext highlighter-rouge">AWS_ACCESS_KEY_ID</code></li>
-  <li><code class="language-plaintext highlighter-rouge">AWS_SECRET_ACCESS_KEY</code></li>
-  <li><code class="language-plaintext highlighter-rouge">AWS_SESSION_TOKEN</code> or <code class="language-plaintext highlighter-rouge">AWS_SECURITY_TOKEN</code> (deprecated)</li>
-</ul>
-
-<p>If any of those environment variables are not set, the values will be read from <code class="language-plaintext highlighter-rouge">$HOME/.aws/credentials</code> using the <code class="language-plaintext highlighter-rouge">[default]</code> or <code class="language-plaintext highlighter-rouge">$AWS_PROFILE</code> profile.</p>
-
-<h3 id="examples">Examples</h3>
-
-<ul>
-  <li>Call S3: List bucket content</li>
-</ul>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./awscurl.l --service s3 --request PUT --data @myfile.json --header 'content-type' 'application/json' --host awscurl-sample-bucket.s3.amazonaws.com --region us-east-1 --endpoint '/bucket/myfile.json'
-# NOTE: for files &gt; 1KB, disable Expect header with: --header Expect ""
+- name: Print Hello World with the full PicoLisp version number
+  run: pil -'prin "Hello World: "' -version -bye
 </code></pre></div></div>
 
+<h2 id="example-workflow">Example workflow</h2>
+
+<p>See the <a href="https://github.com/aw/picolisp-json/blob/master/.github/workflows/main.yml">picolisp-json workflow</a> for a more detailed usage example.</p>
+
+<h2 id="code">Code</h2>
+
+<p>This action is written in CoffeeScript, see <a href="index.coffee">index.coffee</a></p>
+
+<h2 id="notes">Notes</h2>
+
 <ul>
-  <li>Call EC2 (DescribeRegions):</li>
+  <li>Unknown values will be replaced with the default value (ex: version: 1.2.3, will become version: 19.12)</li>
+  <li>The PicoLisp environment is extracted to <code class="language-plaintext highlighter-rouge">/tmp/picoLisp</code></li>
+  <li>32-bit PicoLisp is always compiled</li>
+  <li>64-bit PicoLisp is bootstrapped from the 32-bit PicoLisp</li>
+  <li>64-bit PicoLisp will not be compiled if the <code class="language-plaintext highlighter-rouge">architecture</code> value is <code class="language-plaintext highlighter-rouge">src</code></li>
+  <li><code class="language-plaintext highlighter-rouge">pil21</code> technically only works on 64-bit architectures</li>
 </ul>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./awscurl.l --query 'Action=DescribeRegions&amp;Version=2013-10-15'
-</code></pre></div></div>
+<h2 id="build">Build</h2>
+
+<p>To build this action:</p>
 
 <ul>
-  <li>Call EC2 (ImportKeyPair):
-    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./awscurl.l --service ec2 --region ap-northeast-1 --host ap-northeast-1.ec2.amazonaws.com --query 'Action=ImportKeyPair&amp;KeyName=my-key&amp;Version=2016-11-15' --request POST --data 'PublicKeyMaterial=c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCQVFDMkxIRitwY1g3ZmRtVWZRMm53TUt5ZmQ5ZktFQWVaY2dOblB5UDhCdmZnTGtSREZsZjV5ODR5Q09UbWdlS05Fd2Y1Ujhoei9ySmNwVEpNcURNS0pnS29qWVp5bWNTYzhROFpsY3lQdm5BYXZ5UEJVdUZYbUZMRDlpckNBcXREK3cxSEFpaVNlZyszdXN1VC9Vc1NKNWNOU3g4em5lSVhmMW9aSzJHQmswck90cEtwVy94c3gyNnNtUWNQWkxCMVYxSVc5NmRkbm1kUTNtQU1RNndPVUtSMytwckRWN2dhc2xOUjVTdkdaZnFreGpaUHNXcFNGRFlqN3I3WkU5MjB3YjIrT1RHQ1NIa21maUlDNVI3REdrUEc3emhEbk1yMHVlb3Qra1JRNjE4bklvQTVDeFhiaHdJalFYVTRFYjl3YVZsaXhmeGpmY1hjZGcwSEMyRnc5SHAgYWxleAo='
-</code></pre></div>    </div>
-  </li>
-  <li>Call API Gateway:</li>
+  <li>Install <code class="language-plaintext highlighter-rouge">NodeJS v12</code></li>
+  <li>Install the dev dependencies with <code class="language-plaintext highlighter-rouge">npm install</code></li>
+  <li>Generate the <code class="language-plaintext highlighter-rouge">dist/index.js</code> with <code class="language-plaintext highlighter-rouge">npm run build</code></li>
 </ul>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./awscurl.l --service execute-api --data '{"test":"json"}' --host '&lt;prefix&gt;.execute-api.us-east-1.amazonaws.com' --endpoint '/&lt;resource&gt;'
-</code></pre></div></div>
-
-<h1 id="options">Options</h1>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Usage:		./awscurl.l [options]
-
-Options:
-  --help                    Show this help message and exit
-
-  --data &lt;data&gt;             HTTP POST data (default: None)
-  --endpoint &lt;endpoint&gt;     The API endpoint of the AWS service (default: /)
-  --header &lt;key&gt; &lt;value&gt;    HTTP header data (default: None)
-  --host &lt;host&gt;             The Host of the AWS service (default: ec2.amazonaws.com)
-  --native                  Use faster 'native' calls for hashing data (64-bit version only, default: False)
-  --output &lt;file&gt;           Filename where data should be output (default: STDOUT)
-  --protocol http|https     Protocol for talking to AWS (default: https)
-  --query &lt;query&gt;           The Query parameters of the AWS service (default: None)
-  --region &lt;region&gt;         AWS region (default: us-east-1)
-  --request &lt;method&gt;        Specify request method to use (default: GET)
-  --service &lt;service&gt;       AWS service (default: ec2)
-  --verbose                 Verbose flag (default: False)
-</code></pre></div></div>
 
   </div>
   
